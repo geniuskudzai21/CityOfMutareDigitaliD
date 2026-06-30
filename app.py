@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, request
 
 from database import init_db
 
@@ -15,6 +15,14 @@ with app.app_context():
 @app.route("/")
 def index():
     return render_template("base.html")
+
+
+@app.route("/enroll", methods=["GET", "POST"])
+def enroll():
+    if request.method == "POST":
+        data = request.get_json()
+        return jsonify({"success": True})
+    return render_template("enroll.html")
 
 
 if __name__ == "__main__":
