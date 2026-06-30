@@ -40,4 +40,48 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script>
+let capturedImage = null;
+
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("captureCanvas");
+
+startWebcam(video);
+
+document.getElementById("captureBtn").addEventListener("click", () => {
+    capturedImage = captureFrame(video, canvas);
+    document.getElementById("photoPreview").src = capturedImage;
+    document.getElementById("photoPreview").style.display = "block";
+});
+
+document.getElementById("enrollForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!capturedImage) {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-warning">Please capture a photo first.</div>';
+        return;
+    }
+    const fd = new FormData(e.target);
+    const payload = {
+        full_name: fd.get("full_name"),
+        role: fd.get("role"),
+        department: fd.get("department"),
+        contact: fd.get("contact"),
+        photo: capturedImage,
+    };
+    document.getElementById("statusMsg").innerHTML = '<div class="alert alert-info">Submitting...</div>';
+    try {
+        const res = await fetch("/enroll", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        document.getElementById("statusMsg").innerHTML = data.success
+            ? '<div class="alert alert-success">Enrolled successfully!</div>'
+            : `<div class="alert alert-danger">${data.error || "Enrollment failed."}</div>`;
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    }
+});
+</script>
 {% endblock %}

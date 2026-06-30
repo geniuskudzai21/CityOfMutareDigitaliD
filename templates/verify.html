@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Verify Identity</h2>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <video id="webcam" width="320" height="240" autoplay class="border rounded"></video>
+    </div>
+    <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+        <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
+    </div>
+</div>
+<canvas id="captureCanvas" hidden></canvas>
+<div id="statusMsg" class="mb-3"></div>
+
+<div id="resultPanel" class="card" style="display: none;">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <img id="resultPhoto" class="img-fluid rounded">
+            </div>
+            <div class="col-md-9">
+                <h4 id="resultName"></h4>
+                <p id="resultRole" class="mb-1"></p>
+                <p id="resultDept" class="mb-1"></p>
+                <p id="resultBadge"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script>
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("captureCanvas");
+
+startWebcam(video);
+
+document.getElementById("scanBtn").addEventListener("click", async () => {
+    const photo = captureFrame(video, canvas);
+    document.getElementById("statusMsg").innerHTML = '<div class="alert alert-info">Scanning...</div>';
+    const panel = document.getElementById("resultPanel");
+    panel.style.display = "none";
+
+    try {
+        const res = await fetch("/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photo }),
+        });
+        const data = await res.json();
+        document.getElementById("statusMsg").innerHTML = "";
+
+        if (data.verified) {
+            document.getElementById("resultPhoto").src = data.photo_url;
+            document.getElementById("resultName").textContent = data.full_name;
+            document.getElementById("resultRole").textContent = data.role;
+            document.getElementById("resultDept").textContent = data.department;
+            document.getElementById("resultBadge").innerHTML = '<span class="badge bg-success fs-5">VERIFIED</span>';
+        } else {
+            document.getElementById("resultPhoto").src = "";
+            document.getElementById("resultName").textContent = "";
+            document.getElementById("resultRole").textContent = "";
+            document.getElementById("resultDept").textContent = "";
+            document.getElementById("resultBadge").innerHTML = '<span class="badge bg-danger fs-5">UNKNOWN PERSON</span>';
+        }
+        panel.style.display = "block";
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    }
+});
+</script>
+{% endblock %}
