@@ -66,11 +66,13 @@ def verify():
         tmp.write(image_data)
         tmp_path = tmp.name
 
+    site_name = data.get("site_name", "Main Gate")
+
     unknown_encoding = encode_face(tmp_path)
     os.remove(tmp_path)
 
     if unknown_encoding is None:
-        add_log(db_path, None, "Main Gate", "unknown")
+        add_log(db_path, None, site_name, "unknown")
         return jsonify({"verified": False})
 
     employees = get_all_employees(db_path)
@@ -80,13 +82,13 @@ def verify():
             known.append(pickle.loads(emp["face_encoding"]))
 
     if not known:
-        add_log(db_path, None, "Main Gate", "unknown")
+        add_log(db_path, None, site_name, "unknown")
         return jsonify({"verified": False})
 
     idx = match_face(unknown_encoding, known)
     if idx is not None:
         emp = employees[idx]
-        add_log(db_path, emp["id"], "Main Gate", "verified")
+        add_log(db_path, emp["id"], site_name, "verified")
         return jsonify({
             "verified": True,
             "full_name": emp["full_name"],
@@ -95,7 +97,7 @@ def verify():
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
         })
 
-    add_log(db_path, None, "Main Gate", "unknown")
+    add_log(db_path, None, site_name, "unknown")
     return jsonify({"verified": False})
 
 

@@ -6,6 +6,11 @@
         <video id="webcam" width="320" height="240" autoplay class="border rounded"></video>
     </div>
     <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+        <select id="siteSelect" class="form-select mb-2">
+            <option value="Civic Centre">Civic Centre</option>
+            <option value="Sakubva">Sakubva</option>
+            <option value="Hobhouse">Hobhouse</option>
+        </select>
         <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
     </div>
 </div>
@@ -47,7 +52,7 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
         const res = await fetch("/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photo }),
+            body: JSON.stringify({ photo, site_name: document.getElementById("siteSelect").value }),
         });
         const data = await res.json();
         document.getElementById("statusMsg").innerHTML = "";
