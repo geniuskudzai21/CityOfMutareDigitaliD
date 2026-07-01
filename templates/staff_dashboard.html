@@ -7,7 +7,7 @@
         <div class="card stat-card text-bg-primary">
             <div class="card-body">
                 <div class="stat-icon"><i class="bi bi-geo-alt-fill"></i></div>
-                <div class="stat-value" style="font-size:1.25rem;">{{ centre }}</div>
+                <div class="stat-value stat-value--text">{{ centre }}</div>
                 <div class="stat-label">Assigned Centre</div>
             </div>
         </div>
@@ -21,10 +21,12 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 d-flex align-items-stretch">
-        <div class="card shadow-sm w-100">
-            <div class="card-body d-flex flex-column justify-content-center align-items-center gap-2">
-                <a href="/staff/verify" class="btn btn-primary btn-lg">Go to Verify</a>
+    <div class="col-md-4">
+        <div class="card stat-card text-bg-primary">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <div class="stat-icon"><i class="bi bi-camera-fill"></i></div>
+                <a href="/staff/verify" class="btn btn-light btn-lg px-4 fw-semibold">Go to Verify</a>
+                <div class="stat-label mt-2">Scan a visitor's face</div>
             </div>
         </div>
     </div>
