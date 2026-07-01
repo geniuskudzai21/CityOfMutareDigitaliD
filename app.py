@@ -64,6 +64,7 @@ def inject_user():
         "logged_in": "user_id" in session,
         "username": session.get("username", ""),
         "role": session.get("role", ""),
+        "assigned_centre": session.get("assigned_centre", ""),
     }
 
 

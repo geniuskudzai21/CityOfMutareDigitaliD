@@ -5,44 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Council ID System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">Council ID System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if logged_in %}
-                        {% if role == 'admin' %}
-                        <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/admin/enroll">Enroll</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/verify">Verify</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/admin/logs">Logs</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/admin/centres">Centres</a></li>
-                        {% elif role == 'site_staff' %}
-                        <li class="nav-item"><a class="nav-link" href="/staff/dashboard">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/staff/verify">Verify</a></li>
-                        {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav">
-                    {% if logged_in %}
-                    <li class="nav-item"><span class="nav-link text-light-emphasis">{{ username }}</span></li>
-                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    {% else %}
-                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-                    {% endif %}
-                </ul>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<header class="header">
+    <div class="d-flex align-items-center gap-3">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <a href="/" class="header-brand">
+            <div class="header-logo">
+                <i class="bi bi-building"></i>
             </div>
+            <span class="header-title">Council ID System</span>
+        </a>
+    </div>
+    {% if logged_in %}
+    <div class="header-user">
+        <div class="header-user-info">
+            <div class="header-user-name">{{ username }}</div>
+            <div class="header-user-role">{{ role | replace('_', ' ') | title }}{% if assigned_centre %} &middot; {{ assigned_centre }}{% endif %}</div>
         </div>
-    </nav>
-    <main class="container mt-4">
+        <div class="header-user-avatar" id="userMenuBtn">
+            {{ username[:1] | upper }}
+        </div>
+        <div class="header-dropdown" id="userDropdown">
+            <div class="dropdown-label">{{ username }}</div>
+            <div class="dropdown-divider"></div>
+            <a href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        </div>
+    </div>
+    {% endif %}
+</header>
+
+{% if logged_in %}
+<nav class="sidebar" id="sidebar">
+    {% if role == 'admin' %}
+    <div class="sidebar-section-label">Admin</div>
+    <a href="/admin/dashboard" class="sidebar-link {% if request.path == '/admin/dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="/admin/enroll" class="sidebar-link {% if request.path == '/admin/enroll' %}active{% endif %}">
+        <i class="bi bi-person-plus"></i> Enroll
+    </a>
+    <a href="/verify" class="sidebar-link {% if request.path == '/verify' %}active{% endif %}">
+        <i class="bi bi-camera"></i> Verify
+    </a>
+    <a href="/admin/logs" class="sidebar-link {% if request.path == '/admin/logs' %}active{% endif %}">
+        <i class="bi bi-journal-text"></i> Logs
+    </a>
+    <a href="/admin/unrecognized" class="sidebar-link {% if request.path == '/admin/unrecognized' %}active{% endif %}">
+        <i class="bi bi-question-circle"></i> Unrecognized
+    </a>
+    <a href="/admin/centres" class="sidebar-link {% if request.path == '/admin/centres' %}active{% endif %}">
+        <i class="bi bi-geo-alt"></i> Centres
+    </a>
+    {% elif role == 'site_staff' %}
+    <div class="sidebar-section-label">Staff</div>
+    <a href="/staff/dashboard" class="sidebar-link {% if request.path == '/staff/dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="/staff/verify" class="sidebar-link {% if request.path == '/staff/verify' %}active{% endif %}">
+        <i class="bi bi-camera"></i> Verify
+    </a>
+    {% endif %}
+    <div class="sidebar-spacer"></div>
+    <a href="/logout" class="sidebar-link">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+</nav>
+{% endif %}
+
+<main class="main-content">
+    <div class="container-fluid">
         {% block content %}{% endblock %}
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+    var toggle = document.getElementById("sidebarToggle");
+    var sidebar = document.getElementById("sidebar");
+    var overlay = document.getElementById("sidebarOverlay");
+    if (toggle && sidebar) {
+        function open() {
+            sidebar.classList.add("open");
+            if (overlay) overlay.classList.add("show");
+        }
+        function close() {
+            sidebar.classList.remove("open");
+            if (overlay) overlay.classList.remove("show");
+        }
+        toggle.addEventListener("click", open);
+        if (overlay) overlay.addEventListener("click", close);
+    }
+    var menuBtn = document.getElementById("userMenuBtn");
+    var dropdown = document.getElementById("userDropdown");
+    if (menuBtn && dropdown) {
+        menuBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle("show");
+        });
+        document.addEventListener("click", function() {
+            dropdown.classList.remove("show");
+        });
+        dropdown.addEventListener("click", function(e) {
+            e.stopPropagation();
+        });
+    }
+})();
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>
