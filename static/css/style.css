@@ -317,7 +317,7 @@ body:has(.login-wrapper) {
   background-position: center;
   position: relative;
   overflow: hidden;
-  height: 130vh;
+  height: 135vh;
 }
 
 body:has(.login-wrapper)::before {
@@ -326,7 +326,7 @@ body:has(.login-wrapper)::before {
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2x);
   z-index: 0;
 }
 
