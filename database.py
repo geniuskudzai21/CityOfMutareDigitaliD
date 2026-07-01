@@ -77,3 +77,31 @@ def get_all_logs(db_path):
     """).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def get_filtered_logs(db_path, date=None, site=None):
+    query = """
+        SELECT vl.*, e.full_name, e.role, e.department
+        FROM visit_logs vl
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE 1=1
+    """
+    params = []
+    if date:
+        query += " AND DATE(vl.timestamp) = ?"
+        params.append(date)
+    if site:
+        query += " AND vl.site_name = ?"
+        params.append(site)
+    query += " ORDER BY vl.timestamp DESC"
+    conn = get_connection(db_path)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_distinct_sites(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("SELECT DISTINCT site_name FROM visit_logs ORDER BY site_name").fetchall()
+    conn.close()
+    return [r["site_name"] for r in rows]

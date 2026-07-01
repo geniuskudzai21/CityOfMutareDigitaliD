@@ -6,7 +6,7 @@ import uuid
 
 from flask import Flask, jsonify, render_template, request
 
-from database import add_employee, add_log, get_all_employees, init_db
+from database import add_employee, add_log, get_all_employees, get_distinct_sites, get_filtered_logs, init_db
 from face_utils import encode_face, match_face
 
 app = Flask(__name__)
@@ -99,6 +99,15 @@ def verify():
 
     add_log(db_path, None, site_name, "unknown")
     return jsonify({"verified": False})
+
+
+@app.route("/logs")
+def logs():
+    date = request.args.get("date")
+    site = request.args.get("site")
+    log_entries = get_filtered_logs(db_path, date, site)
+    sites = get_distinct_sites(db_path)
+    return render_template("logs.html", logs=log_entries, sites=sites, selected_date=date, selected_site=site)
 
 
 if __name__ == "__main__":

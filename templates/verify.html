@@ -1,33 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Verify Identity</h2>
-<div class="row mb-3">
-    <div class="col-md-6">
-        <video id="webcam" width="320" height="240" autoplay class="border rounded"></video>
-    </div>
-    <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
-        <select id="siteSelect" class="form-select mb-2">
-            <option value="Civic Centre">Civic Centre</option>
-            <option value="Sakubva">Sakubva</option>
-            <option value="Hobhouse">Hobhouse</option>
-        </select>
-        <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
-    </div>
-</div>
-<canvas id="captureCanvas" hidden></canvas>
-<div id="statusMsg" class="mb-3"></div>
-
-<div id="resultPanel" class="card" style="display: none;">
+<div class="card shadow-sm">
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-3">
-                <img id="resultPhoto" class="img-fluid rounded">
+        <h2 class="card-title mb-4">Verify Identity</h2>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <video id="webcam" width="320" height="240" autoplay class="border rounded w-100"></video>
             </div>
-            <div class="col-md-9">
-                <h4 id="resultName"></h4>
-                <p id="resultRole" class="mb-1"></p>
-                <p id="resultDept" class="mb-1"></p>
-                <p id="resultBadge"></p>
+            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+                <select id="siteSelect" class="form-select mb-2">
+                    <option value="Civic Centre">Civic Centre</option>
+                    <option value="Sakubva">Sakubva</option>
+                    <option value="Hobhouse">Hobhouse</option>
+                </select>
+                <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
+                <div id="spinner" class="spinner-border text-primary mt-2" role="status" style="display: none;">
+                    <span class="visually-hidden">Scanning...</span>
+                </div>
+            </div>
+        </div>
+        <canvas id="captureCanvas" hidden></canvas>
+
+        <div id="statusMsg" class="mb-3"></div>
+
+        <div id="resultPanel" class="card border-0 bg-light" style="display: none;">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <img id="resultPhoto" class="img-fluid rounded">
+                    </div>
+                    <div class="col-md-9">
+                        <h4 id="resultName"></h4>
+                        <p id="resultRole" class="mb-1"></p>
+                        <p id="resultDept" class="mb-1"></p>
+                        <p id="resultBadge"></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -39,14 +47,18 @@
 <script>
 const video = document.getElementById("webcam");
 const canvas = document.getElementById("captureCanvas");
+const scanBtn = document.getElementById("scanBtn");
+const spinner = document.getElementById("spinner");
 
 startWebcam(video);
 
-document.getElementById("scanBtn").addEventListener("click", async () => {
+scanBtn.addEventListener("click", async () => {
     const photo = captureFrame(video, canvas);
-    document.getElementById("statusMsg").innerHTML = '<div class="alert alert-info">Scanning...</div>';
     const panel = document.getElementById("resultPanel");
     panel.style.display = "none";
+    document.getElementById("statusMsg").innerHTML = "";
+    scanBtn.disabled = true;
+    spinner.style.display = "inline-block";
 
     try {
         const res = await fetch("/verify", {
@@ -55,7 +67,6 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
             body: JSON.stringify({ photo, site_name: document.getElementById("siteSelect").value }),
         });
         const data = await res.json();
-        document.getElementById("statusMsg").innerHTML = "";
 
         if (data.verified) {
             document.getElementById("resultPhoto").src = data.photo_url;
@@ -73,6 +84,9 @@ document.getElementById("scanBtn").addEventListener("click", async () => {
         panel.style.display = "block";
     } catch {
         document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    } finally {
+        scanBtn.disabled = false;
+        spinner.style.display = "none";
     }
 });
 </script>
