@@ -15,6 +15,7 @@ def init_db(db_path):
             role TEXT,
             department TEXT,
             contact TEXT,
+            centre TEXT,
             photo_path TEXT,
             face_encoding BLOB,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -24,6 +25,8 @@ def init_db(db_path):
             employee_id INTEGER REFERENCES employees(id) ON DELETE SET NULL,
             site_name TEXT NOT NULL,
             status TEXT NOT NULL CHECK(status IN ('verified', 'unknown')),
+            purpose TEXT,
+            notes TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS users (
@@ -41,8 +44,24 @@ def init_db(db_path):
     """)
     conn.commit()
     conn.close()
+    migrate_db(db_path)
     init_users(db_path)
     init_centres(db_path)
+
+
+def migrate_db(db_path):
+    conn = sqlite3.connect(db_path)
+    for col in ["centre"]:
+        try:
+            conn.execute(f"ALTER TABLE employees ADD COLUMN {col} TEXT")
+        except sqlite3.OperationalError:
+            pass
+    for col in ["purpose", "notes"]:
+        try:
+            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
+        except sqlite3.OperationalError:
+            pass
+    conn.close()
 
 
 def init_users(db_path):
@@ -80,11 +99,11 @@ def get_connection(db_path):
     return conn
 
 
-def add_employee(db_path, full_name, role, department, contact, photo_path, face_encoding):
+def add_employee(db_path, full_name, role, department, contact, centre, photo_path, face_encoding):
     conn = get_connection(db_path)
     cursor = conn.execute(
-        "INSERT INTO employees (full_name, role, department, contact, photo_path, face_encoding) VALUES (?, ?, ?, ?, ?, ?)",
-        (full_name, role, department, contact, photo_path, face_encoding),
+        "INSERT INTO employees (full_name, role, department, contact, centre, photo_path, face_encoding) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (full_name, role, department, contact, centre, photo_path, face_encoding),
     )
     conn.commit()
     emp_id = cursor.lastrowid
@@ -99,11 +118,11 @@ def get_all_employees(db_path):
     return [dict(r) for r in rows]
 
 
-def add_log(db_path, employee_id, site_name, status):
+def add_log(db_path, employee_id, site_name, status, purpose=None, notes=None):
     conn = get_connection(db_path)
     cursor = conn.execute(
-        "INSERT INTO visit_logs (employee_id, site_name, status) VALUES (?, ?, ?)",
-        (employee_id, site_name, status),
+        "INSERT INTO visit_logs (employee_id, site_name, status, purpose, notes) VALUES (?, ?, ?, ?, ?)",
+        (employee_id, site_name, status, purpose, notes),
     )
     conn.commit()
     log_id = cursor.lastrowid
@@ -123,9 +142,9 @@ def get_all_logs(db_path):
     return [dict(r) for r in rows]
 
 
-def get_filtered_logs(db_path, date=None, site=None, name=None):
+def get_filtered_logs(db_path, date=None, site=None, name=None, status=None, centre=None):
     query = """
-        SELECT vl.*, e.full_name, e.role, e.department
+        SELECT vl.*, e.full_name, e.role, e.department, e.centre
         FROM visit_logs vl
         LEFT JOIN employees e ON vl.employee_id = e.id
         WHERE 1=1
@@ -140,6 +159,12 @@ def get_filtered_logs(db_path, date=None, site=None, name=None):
     if name:
         query += " AND e.full_name LIKE ?"
         params.append(f"%{name}%")
+    if status:
+        query += " AND vl.status = ?"
+        params.append(status)
+    if centre:
+        query += " AND e.centre = ?"
+        params.append(centre)
     query += " ORDER BY vl.timestamp DESC"
     conn = get_connection(db_path)
     rows = conn.execute(query, params).fetchall()
@@ -189,6 +214,7 @@ def get_dashboard_stats(db_path):
     conn = get_connection(db_path)
     emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
     total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
+    today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = DATE('now')").fetchone()[0]
     unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
     recent_unknown = conn.execute("""
         SELECT vl.*, e.full_name
@@ -201,9 +227,33 @@ def get_dashboard_stats(db_path):
     return {
         "employee_count": emp_count,
         "total_logs": total_logs,
+        "today_visits": today_visits,
         "unknown_count": unknown_count,
         "recent_unknown": [dict(r) for r in recent_unknown],
     }
+
+
+def get_unrecognized_logs(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT vl.*, e.full_name, e.role, e.department, e.centre
+        FROM visit_logs vl
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE vl.status = 'unknown'
+        ORDER BY vl.timestamp DESC
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_today_centre_visits(db_path, centre):
+    conn = get_connection(db_path)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM visit_logs WHERE site_name = ? AND DATE(timestamp) = DATE('now')",
+        (centre,),
+    ).fetchone()[0]
+    conn.close()
+    return count
 
 
 def get_staff_recent_logs(db_path, centre, limit=20):

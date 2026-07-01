@@ -4,7 +4,7 @@
     <div class="card-body">
         <h2 class="card-title mb-4">Visit Logs</h2>
 
-        <form class="row g-3 mb-4" method="get" action="/logs">
+        <form class="row g-3 mb-4" method="get" action="/admin/logs">
             <div class="col-auto">
                 <input type="date" class="form-control" name="date" value="{{ selected_date or '' }}">
             </div>
@@ -20,8 +20,23 @@
                 </select>
             </div>
             <div class="col-auto">
+                <select class="form-select" name="centre">
+                    <option value="">All Centres</option>
+                    {% for c in centres %}
+                    <option value="{{ c }}" {% if selected_centre == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    <option value="verified" {% if selected_status == 'verified' %}selected{% endif %}>Verified</option>
+                    <option value="unknown" {% if selected_status == 'unknown' %}selected{% endif %}>Unknown</option>
+                </select>
+            </div>
+            <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="/logs" class="btn btn-secondary">Clear</a>
+                <a href="/admin/logs" class="btn btn-secondary">Clear</a>
             </div>
         </form>
 
@@ -32,7 +47,11 @@
                         <th>Date / Time</th>
                         <th>Name</th>
                         <th>Role</th>
+                        <th>Department</th>
+                        <th>Centre</th>
                         <th>Site</th>
+                        <th>Purpose</th>
+                        <th>Notes</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -42,7 +61,11 @@
                         <td>{{ log.timestamp }}</td>
                         <td>{{ log.full_name or '—' }}</td>
                         <td>{{ log.role or '—' }}</td>
+                        <td>{{ log.department or '—' }}</td>
+                        <td>{{ log.centre or '—' }}</td>
                         <td>{{ log.site_name }}</td>
+                        <td>{{ log.purpose or '—' }}</td>
+                        <td>{{ log.notes or '—' }}</td>
                         <td>
                             {% if log.status == 'verified' %}
                             <span class="badge bg-success">VERIFIED</span>
@@ -53,7 +76,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted">No logs found.</td>
+                        <td colspan="9" class="text-center text-muted">No logs found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

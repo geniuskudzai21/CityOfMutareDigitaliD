@@ -20,6 +20,15 @@
                 <label for="contact" class="form-label">Contact</label>
                 <input type="text" class="form-control" id="contact" name="contact">
             </div>
+            <div class="mb-3">
+                <label for="centre" class="form-label">Centre</label>
+                <select class="form-select" id="centre" name="centre">
+                    <option value="">— Select —</option>
+                    {% for c in centres %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label">Photo</label>
@@ -74,11 +83,12 @@ document.getElementById("enrollForm").addEventListener("submit", async (e) => {
         role: fd.get("role"),
         department: fd.get("department"),
         contact: fd.get("contact"),
+        centre: fd.get("centre"),
         photo: capturedImage,
     };
     document.getElementById("statusMsg").innerHTML = '<div class="alert alert-info">Submitting...</div>';
     try {
-        const res = await fetch("/enroll", {
+        const res = await fetch("/admin/enroll", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

@@ -13,6 +13,8 @@
                     <option value="Sakubva">Sakubva</option>
                     <option value="Hobhouse">Hobhouse</option>
                 </select>
+                <input type="text" id="purposeInput" class="form-control mb-2" placeholder="Purpose of visit (optional)">
+                <input type="text" id="notesInput" class="form-control mb-2" placeholder="Notes (optional)">
                 <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
                 <div id="spinner" class="spinner-border text-primary mt-2" role="status" style="display: none;">
                     <span class="visually-hidden">Scanning...</span>
@@ -64,7 +66,12 @@ scanBtn.addEventListener("click", async () => {
         const res = await fetch("/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ photo, site_name: document.getElementById("siteSelect").value }),
+            body: JSON.stringify({
+                photo,
+                site_name: document.getElementById("siteSelect").value,
+                purpose: document.getElementById("purposeInput").value || null,
+                notes: document.getElementById("notesInput").value || null,
+            }),
         });
         const data = await res.json();
 

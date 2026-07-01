@@ -19,6 +19,8 @@ from database import (
     get_distinct_sites,
     get_filtered_logs,
     get_staff_recent_logs,
+    get_today_centre_visits,
+    get_unrecognized_logs,
     get_user_by_username,
     init_db,
 )
@@ -112,41 +114,46 @@ def admin_dashboard():
 def staff_dashboard():
     centre = session.get("assigned_centre", "")
     recent_logs = get_staff_recent_logs(db_path, centre)
-    return render_template("staff_dashboard.html", centre=centre, logs=recent_logs)
+    today_count = get_today_centre_visits(db_path, centre)
+    return render_template("staff_dashboard.html", centre=centre, logs=recent_logs, today_count=today_count)
 
 
-@app.route("/enroll", methods=["GET", "POST"])
+@app.route("/admin/enroll", methods=["GET", "POST"])
 @login_required
 @role_required("admin")
-def enroll():
+def admin_enroll():
     if request.method == "POST":
-        data = request.get_json()
+        return handle_enroll(request.get_json())
+    centres = get_all_centres(db_path)
+    return render_template("admin/enroll.html", centres=centres)
 
-        header, encoded = data["photo"].split(",", 1)
-        image_data = base64.b64decode(encoded)
 
-        filename = f"{uuid.uuid4().hex}.jpg"
-        photo_path = os.path.join(PHOTO_DIR, filename)
-        os.makedirs(PHOTO_DIR, exist_ok=True)
-        with open(photo_path, "wb") as f:
-            f.write(image_data)
+def handle_enroll(data):
+    header, encoded = data["photo"].split(",", 1)
+    image_data = base64.b64decode(encoded)
 
-        encoding = encode_face(photo_path)
-        if encoding is None:
-            os.remove(photo_path)
-            return jsonify({"success": False, "error": "No face detected in the photo."})
+    filename = f"{uuid.uuid4().hex}.jpg"
+    photo_path = os.path.join(PHOTO_DIR, filename)
+    os.makedirs(PHOTO_DIR, exist_ok=True)
+    with open(photo_path, "wb") as f:
+        f.write(image_data)
 
-        add_employee(
-            db_path,
-            data["full_name"],
-            data.get("role"),
-            data.get("department"),
-            data.get("contact"),
-            photo_path,
-            pickle.dumps(encoding),
-        )
-        return jsonify({"success": True})
-    return render_template("enroll.html")
+    encoding = encode_face(photo_path)
+    if encoding is None:
+        os.remove(photo_path)
+        return jsonify({"success": False, "error": "No face detected in the photo."})
+
+    add_employee(
+        db_path,
+        data["full_name"],
+        data.get("role"),
+        data.get("department"),
+        data.get("contact"),
+        data.get("centre"),
+        photo_path,
+        pickle.dumps(encoding),
+    )
+    return jsonify({"success": True})
 
 
 @app.route("/verify", methods=["GET", "POST"])
@@ -164,12 +171,14 @@ def verify():
         tmp_path = tmp.name
 
     site_name = data.get("site_name", "Main Gate")
+    purpose = data.get("purpose")
+    notes = data.get("notes")
 
     unknown_encoding = encode_face(tmp_path)
     os.remove(tmp_path)
 
     if unknown_encoding is None:
-        add_log(db_path, None, site_name, "unknown")
+        add_log(db_path, None, site_name, "unknown", purpose, notes)
         return jsonify({"verified": False})
 
     employees = get_all_employees(db_path)
@@ -179,13 +188,13 @@ def verify():
             known.append(pickle.loads(emp["face_encoding"]))
 
     if not known:
-        add_log(db_path, None, site_name, "unknown")
+        add_log(db_path, None, site_name, "unknown", purpose, notes)
         return jsonify({"verified": False})
 
     idx = match_face(unknown_encoding, known)
     if idx is not None:
         emp = employees[idx]
-        add_log(db_path, emp["id"], site_name, "verified")
+        add_log(db_path, emp["id"], site_name, "verified", purpose, notes)
         return jsonify({
             "verified": True,
             "full_name": emp["full_name"],
@@ -194,20 +203,87 @@ def verify():
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
         })
 
-    add_log(db_path, None, site_name, "unknown")
+    add_log(db_path, None, site_name, "unknown", purpose, notes)
     return jsonify({"verified": False})
 
 
-@app.route("/logs")
+@app.route("/staff/verify", methods=["GET", "POST"])
+@login_required
+@role_required("site_staff")
+def staff_verify():
+    if request.method == "GET":
+        return render_template("staff/verify.html")
+    data = request.get_json()
+    header, encoded = data["photo"].split(",", 1)
+    image_data = base64.b64decode(encoded)
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(image_data)
+        tmp_path = tmp.name
+    unknown_encoding = encode_face(tmp_path)
+    os.remove(tmp_path)
+    if unknown_encoding is None:
+        return jsonify({"verified": False, "error": "No face detected"})
+    employees = get_all_employees(db_path)
+    known = []
+    for emp in employees:
+        if emp["face_encoding"]:
+            known.append((emp, pickle.loads(emp["face_encoding"])))
+    if not known:
+        return jsonify({"verified": False, "error": "No enrolled faces"})
+    emp_list, enc_list = zip(*known)
+    idx = match_face(unknown_encoding, list(enc_list))
+    if idx is not None:
+        emp = emp_list[idx]
+        return jsonify({
+            "verified": True,
+            "employee_id": emp["id"],
+            "full_name": emp["full_name"],
+            "role": emp["role"],
+            "department": emp["department"],
+            "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
+        })
+    return jsonify({"verified": False, "error": "No match found"})
+
+
+@app.route("/staff/confirm-visit", methods=["POST"])
+@login_required
+@role_required("site_staff")
+def staff_confirm_visit():
+    data = request.get_json()
+    add_log(
+        db_path,
+        data["employee_id"],
+        session.get("assigned_centre", ""),
+        "verified",
+        data.get("purpose"),
+        data.get("notes"),
+    )
+    return jsonify({"success": True})
+
+
+@app.route("/admin/logs")
 @login_required
 @role_required("admin")
-def logs():
+def admin_logs():
     date = request.args.get("date")
     site = request.args.get("site")
     name = request.args.get("name")
-    log_entries = get_filtered_logs(db_path, date, site, name)
+    status = request.args.get("status")
+    centre = request.args.get("centre")
+    log_entries = get_filtered_logs(db_path, date, site, name, status, centre)
     sites = get_distinct_sites(db_path)
-    return render_template("logs.html", logs=log_entries, sites=sites, selected_date=date, selected_site=site, selected_name=name)
+    centres = get_all_centres(db_path)
+    return render_template("admin/logs.html", logs=log_entries, sites=sites, centres=centres,
+                           selected_date=date, selected_site=site, selected_name=name,
+                           selected_status=status, selected_centre=centre)
+
+
+@app.route("/admin/unrecognized")
+@login_required
+@role_required("admin")
+def admin_unrecognized():
+    logs = get_unrecognized_logs(db_path)
+    return render_template("admin/unrecognized.html", logs=logs)
 
 
 @app.route("/admin/centres", methods=["GET", "POST"])

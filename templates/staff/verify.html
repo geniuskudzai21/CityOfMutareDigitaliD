@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="card-title mb-4">Verify Identity</h2>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <video id="webcam" width="320" height="240" autoplay class="border rounded w-100"></video>
+            </div>
+            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+                <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
+                <div id="spinner" class="spinner-border text-primary mt-2" role="status" style="display: none;">
+                    <span class="visually-hidden">Scanning...</span>
+                </div>
+            </div>
+        </div>
+        <canvas id="captureCanvas" hidden></canvas>
+
+        <div id="statusMsg" class="mb-3"></div>
+
+        <div id="resultPanel" class="card border-0 bg-light" style="display: none;">
+            <div class="card-body">
+                <div id="matchResult" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img id="resultPhoto" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-9">
+                            <h4 id="resultName"></h4>
+                            <p id="resultRole" class="mb-1"></p>
+                            <p id="resultDept" class="mb-1"></p>
+                            <p id="resultBadge"></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h5>Log Visit</h5>
+                    <div class="mb-3">
+                        <label for="purposeSelect" class="form-label">Purpose of Visit</label>
+                        <select id="purposeSelect" class="form-select">
+                            <option value="">— Select —</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Equipment Repair/Collection">Equipment Repair/Collection</option>
+                            <option value="Delivery">Delivery</option>
+                            <option value="Training">Training</option>
+                            <option value="Site Inspection">Site Inspection</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notesInput" class="form-label">Notes (optional)</label>
+                        <textarea id="notesInput" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="button" id="confirmBtn" class="btn btn-success">Confirm & Log Visit</button>
+                </div>
+                <div id="noMatchResult" style="display: none;">
+                    <div class="text-center py-4">
+                        <span class="badge bg-danger fs-5 mb-3">UNRECOGNIZED</span>
+                        <p class="mb-0">Unrecognized — flagged for admin review</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script>
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("captureCanvas");
+const scanBtn = document.getElementById("scanBtn");
+const confirmBtn = document.getElementById("confirmBtn");
+const spinner = document.getElementById("spinner");
+let lastMatch = null;
+
+startWebcam(video);
+
+scanBtn.addEventListener("click", async () => {
+    const photo = captureFrame(video, canvas);
+    const panel = document.getElementById("resultPanel");
+    const matchResult = document.getElementById("matchResult");
+    const noMatchResult = document.getElementById("noMatchResult");
+    panel.style.display = "none";
+    matchResult.style.display = "none";
+    noMatchResult.style.display = "none";
+    document.getElementById("statusMsg").innerHTML = "";
+    scanBtn.disabled = true;
+    spinner.style.display = "inline-block";
+
+    try {
+        const res = await fetch("/staff/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ photo }),
+        });
+        const data = await res.json();
+
+        if (data.verified) {
+            lastMatch = data;
+            document.getElementById("resultPhoto").src = data.photo_url;
+            document.getElementById("resultName").textContent = data.full_name;
+            document.getElementById("resultRole").textContent = data.role;
+            document.getElementById("resultDept").textContent = data.department;
+            document.getElementById("resultBadge").innerHTML = '<span class="badge bg-success fs-5">MATCHED</span>';
+            matchResult.style.display = "block";
+        } else {
+            lastMatch = null;
+            noMatchResult.style.display = "block";
+        }
+        panel.style.display = "block";
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    } finally {
+        scanBtn.disabled = false;
+        spinner.style.display = "none";
+    }
+});
+
+confirmBtn.addEventListener("click", async () => {
+    if (!lastMatch) return;
+    confirmBtn.disabled = true;
+    try {
+        const res = await fetch("/staff/confirm-visit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                employee_id: lastMatch.employee_id,
+                purpose: document.getElementById("purposeSelect").value || null,
+                notes: document.getElementById("notesInput").value || null,
+            }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("statusMsg").innerHTML = '<div class="alert alert-success">Visit logged successfully!</div>';
+            document.getElementById("matchResult").style.display = "none";
+            document.getElementById("resultPanel").style.display = "none";
+            lastMatch = null;
+        }
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    } finally {
+        confirmBtn.disabled = false;
+    }
+});
+</script>
+{% endblock %}
