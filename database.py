@@ -1,6 +1,8 @@
 import sqlite3
 import os
 
+from werkzeug.security import generate_password_hash
+
 
 def init_db(db_path):
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -24,8 +26,34 @@ def init_db(db_path):
             status TEXT NOT NULL CHECK(status IN ('verified', 'unknown')),
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('admin', 'site_staff')),
+            assigned_centre TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     conn.commit()
+    conn.close()
+    init_users(db_path)
+
+
+def init_users(db_path):
+    conn = get_connection(db_path)
+    existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    if existing == 0:
+        default_users = [
+            ("admin", generate_password_hash("admin123"), "admin", None),
+            ("staff1", generate_password_hash("staff123"), "site_staff", "Civic Centre"),
+            ("staff2", generate_password_hash("staff123"), "site_staff", "Sakubva"),
+        ]
+        conn.executemany(
+            "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
+            default_users,
+        )
+        conn.commit()
     conn.close()
 
 
@@ -108,3 +136,44 @@ def get_distinct_sites(db_path):
     rows = conn.execute("SELECT DISTINCT site_name FROM visit_logs ORDER BY site_name").fetchall()
     conn.close()
     return [r["site_name"] for r in rows]
+
+
+def get_user_by_username(db_path, username):
+    conn = get_connection(db_path)
+    row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_dashboard_stats(db_path):
+    conn = get_connection(db_path)
+    emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
+    total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
+    unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
+    recent_unknown = conn.execute("""
+        SELECT vl.*, e.full_name
+        FROM visit_logs vl
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE vl.status = 'unknown'
+        ORDER BY vl.timestamp DESC LIMIT 10
+    """).fetchall()
+    conn.close()
+    return {
+        "employee_count": emp_count,
+        "total_logs": total_logs,
+        "unknown_count": unknown_count,
+        "recent_unknown": [dict(r) for r in recent_unknown],
+    }
+
+
+def get_staff_recent_logs(db_path, centre, limit=20):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT vl.*, e.full_name, e.role
+        FROM visit_logs vl
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE vl.site_name = ?
+        ORDER BY vl.timestamp DESC LIMIT ?
+    """, (centre, limit)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
