@@ -55,8 +55,10 @@ def enroll():
     return render_template("enroll.html")
 
 
-@app.route("/verify", methods=["POST"])
+@app.route("/verify", methods=["GET", "POST"])
 def verify():
+    if request.method == "GET":
+        return render_template("verify.html")
     data = request.get_json()
 
     header, encoded = data["photo"].split(",", 1)
