@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="mb-4">Manage Centres & Staff</h2>
+<h2 class="mb-4">Manage Centres &amp; Staff</h2>
 
 <div class="row g-4">
-    <div class="col-md-5">
+    <div class="col-xl-5 col-lg-6">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h5 class="card-title">Create Site Staff Login</h5>
@@ -33,7 +33,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-7">
+    <div class="col-xl-7 col-lg-6">
         <div class="card shadow-sm">
             <div class="card-body">
                 <h5 class="card-title">Existing Site Staff</h5>
@@ -51,11 +51,17 @@
                             <tr>
                                 <td>{{ s.username }}</td>
                                 <td>{{ s.assigned_centre or '—' }}</td>
-                                <td>{{ s.created_at }}</td>
+                                <td class="text-nowrap">{{ s.created_at }}</td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No staff created yet.</td>
+                                <td colspan="3" class="p-0">
+                                    <div class="empty-state">
+                                        <div class="empty-icon"><i class="bi bi-people"></i></div>
+                                        <h6>No staff created yet</h6>
+                                        <p>Use the form to create site staff logins.</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

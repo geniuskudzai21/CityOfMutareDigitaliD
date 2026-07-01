@@ -2,32 +2,35 @@
 {% block content %}
 <h2 class="mb-4">Admin Dashboard</h2>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card text-bg-primary shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Total Employees</h5>
-                <span class="fs-2">{{ stats.employee_count }}</span>
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card text-bg-primary">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value">{{ stats.employee_count }}</div>
+                <div class="stat-label">Total Employees</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-bg-success shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Today's Visits</h5>
-                <span class="fs-2">{{ stats.today_visits }}</span>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card text-bg-success">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="stat-value">{{ stats.today_visits }}</div>
+                <div class="stat-label">Today's Visits</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-bg-warning shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Unrecognized Faces</h5>
-                <span class="fs-2">{{ stats.unknown_count }}</span>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="card stat-card text-bg-warning">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div class="stat-value">{{ stats.unknown_count }}</div>
+                <div class="stat-label">Unrecognized Faces</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 d-flex align-items-stretch">
+    <div class="col-xl-3 col-lg-6 col-md-6 d-flex align-items-stretch">
         <div class="card shadow-sm w-100">
             <div class="card-body d-flex flex-column gap-2">
                 <a href="/admin/enroll" class="btn btn-success">Enroll New Staff</a>
@@ -54,20 +57,28 @@
             <tbody>
                 {% for log in stats.recent_unknown %}
                 <tr>
-                    <td>{{ log.timestamp }}</td>
+                    <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.full_name or '—' }}</td>
                     <td>{{ log.site_name }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="3" class="text-center text-muted">No unrecognized scans.</td>
+                    <td colspan="3" class="p-0">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
+                            <h6>No unrecognized scans</h6>
+                            <p>All recent scans have been successfully matched.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% if stats.recent_unknown %}
     <div class="card-footer text-end">
-        <a href="/admin/unrecognized" class="btn btn-sm btn-outline-danger">View All Unrecognized →</a>
+        <a href="/admin/unrecognized" class="btn btn-sm btn-outline-danger">View All Unrecognized &rarr;</a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

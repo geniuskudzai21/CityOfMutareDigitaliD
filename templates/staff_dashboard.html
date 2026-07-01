@@ -2,20 +2,22 @@
 {% block content %}
 <h2 class="mb-4">{{ centre }}</h2>
 
-<div class="row g-4 mb-4">
+<div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card text-bg-primary shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Assigned Centre</h5>
-                <span class="fs-5">{{ centre }}</span>
+        <div class="card stat-card text-bg-primary">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="stat-value" style="font-size:1.25rem;">{{ centre }}</div>
+                <div class="stat-label">Assigned Centre</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-bg-success shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="card-title">Today's Visits</h5>
-                <span class="fs-2">{{ today_count }}</span>
+        <div class="card stat-card text-bg-success">
+            <div class="card-body">
+                <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+                <div class="stat-value">{{ today_count }}</div>
+                <div class="stat-label">Today's Visits</div>
             </div>
         </div>
     </div>
@@ -43,7 +45,7 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td>{{ log.timestamp }}</td>
+                    <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.full_name or '—' }}</td>
                     <td>{{ log.role or '—' }}</td>
                     <td>
@@ -56,7 +58,13 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" class="text-center text-muted">No scans yet.</td>
+                    <td colspan="4" class="p-0">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-clock-history"></i></div>
+                            <h6>No visits logged yet today</h6>
+                            <p>Scan a face to begin recording visits at {{ centre }}.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

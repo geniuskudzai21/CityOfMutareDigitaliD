@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="mb-4">Unrecognized Faces — Review Queue</h2>
+<h2 class="mb-4">Unrecognized Faces &mdash; Review Queue</h2>
 
 <div class="card shadow-sm">
     <div class="table-responsive">
@@ -9,30 +9,36 @@
                 <tr>
                     <th>Date / Time</th>
                     <th>Site</th>
-                    <th>Name (if matched)</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Centre</th>
+                    <th>Name</th>
+                    <th class="d-none d-md-table-cell">Role</th>
+                    <th class="d-none d-md-table-cell">Department</th>
+                    <th class="d-none d-lg-table-cell">Centre</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td>{{ log.timestamp }}</td>
+                    <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.site_name }}</td>
                     <td>{{ log.full_name or '—' }}</td>
-                    <td>{{ log.role or '—' }}</td>
-                    <td>{{ log.department or '—' }}</td>
-                    <td>{{ log.centre or '—' }}</td>
+                    <td class="d-none d-md-table-cell">{{ log.role or '—' }}</td>
+                    <td class="d-none d-md-table-cell">{{ log.department or '—' }}</td>
+                    <td class="d-none d-lg-table-cell">{{ log.centre or '—' }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center text-muted">No unrecognized scans recorded.</td>
+                    <td colspan="6" class="p-0">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
+                            <h6>Queue is clear</h6>
+                            <p>All unrecognized scans have been reviewed.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-<a href="/admin/dashboard" class="btn btn-secondary mt-3">← Back to Dashboard</a>
+<a href="/admin/dashboard" class="btn btn-secondary mt-3">&larr; Back to Dashboard</a>
 {% endblock %}
