@@ -1,43 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h2 class="card-title mb-4">Verify Identity</h2>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <video id="webcam" width="320" height="240" autoplay class="border rounded w-100"></video>
-            </div>
-            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
-                <select id="siteSelect" class="form-select mb-2">
-                    <option value="Civic Centre">Civic Centre</option>
-                    <option value="Sakubva">Sakubva</option>
-                    <option value="Hobhouse">Hobhouse</option>
-                </select>
-                <input type="text" id="purposeInput" class="form-control mb-2" placeholder="Purpose of visit (optional)">
-                <input type="text" id="notesInput" class="form-control mb-2" placeholder="Notes (optional)">
-                <button type="button" id="scanBtn" class="btn btn-primary btn-lg">Scan Face</button>
-                <div id="spinner" class="spinner-border text-primary mt-2" role="status" style="display: none;">
-                    <span class="visually-hidden">Scanning...</span>
-                </div>
-            </div>
-        </div>
-        <canvas id="captureCanvas" hidden></canvas>
-
-        <div id="statusMsg" class="mb-3"></div>
-
-        <div id="resultPanel" class="card border-0 bg-light" style="display: none;">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <img id="resultPhoto" class="img-fluid rounded">
+                <h2 class="card-title mb-4">Verify Identity</h2>
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <div class="webcam-frame">
+                            <video id="webcam" autoplay></video>
+                            <div class="scan-overlay" id="scanOverlay">
+                                <div class="scan-line"></div>
+                                <div class="scan-corner-tl"></div>
+                                <div class="scan-corner-tr"></div>
+                                <div class="scan-corner-bl"></div>
+                                <div class="scan-corner-br"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-9">
-                        <h4 id="resultName"></h4>
-                        <p id="resultRole" class="mb-1"></p>
-                        <p id="resultDept" class="mb-1"></p>
-                        <p id="resultBadge"></p>
+                    <div class="col-md-5 d-flex flex-column justify-content-center gap-2">
+                        <select id="siteSelect" class="form-select">
+                            <option value="Civic Centre">Civic Centre</option>
+                            <option value="Sakubva">Sakubva</option>
+                            <option value="Hobhouse">Hobhouse</option>
+                        </select>
+                        <input type="text" id="purposeInput" class="form-control" placeholder="Purpose of visit (optional)">
+                        <input type="text" id="notesInput" class="form-control" placeholder="Notes (optional)">
+                        <button type="button" id="scanBtn" class="btn btn-primary btn-lg mt-2">Scan Face</button>
+                        <div id="spinner" class="text-center py-2" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Scanning...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <canvas id="captureCanvas" hidden></canvas>
+                <div id="statusMsg" class="mt-3"></div>
+                <div id="resultPanel" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -51,16 +50,40 @@ const video = document.getElementById("webcam");
 const canvas = document.getElementById("captureCanvas");
 const scanBtn = document.getElementById("scanBtn");
 const spinner = document.getElementById("spinner");
+const overlay = document.getElementById("scanOverlay");
 
 startWebcam(video);
 
+function showResult(data) {
+    const panel = document.getElementById("resultPanel");
+    if (data.verified) {
+        panel.innerHTML =
+            '<div class="result-card verified">' +
+            '<div class="result-icon"><i class="bi bi-check-circle-fill"></i></div>' +
+            '<h3>VERIFIED</h3>' +
+            '<p><strong>' + data.full_name + '</strong></p>' +
+            '<p>' + (data.role || '') + '</p>' +
+            '<p class="result-sub">' + (data.department || '') + '</p>' +
+            '</div>';
+    } else {
+        panel.innerHTML =
+            '<div class="result-card unknown">' +
+            '<div class="result-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>' +
+            '<h3>UNKNOWN PERSON</h3>' +
+            '<p>Face did not match any enrolled record.</p>' +
+            '<p class="result-sub">This scan has been flagged for admin review.</p>' +
+            '</div>';
+    }
+    panel.style.display = "block";
+}
+
 scanBtn.addEventListener("click", async () => {
     const photo = captureFrame(video, canvas);
-    const panel = document.getElementById("resultPanel");
-    panel.style.display = "none";
+    document.getElementById("resultPanel").style.display = "none";
     document.getElementById("statusMsg").innerHTML = "";
     scanBtn.disabled = true;
-    spinner.style.display = "inline-block";
+    spinner.style.display = "block";
+    overlay.classList.add("active");
 
     try {
         const res = await fetch("/verify", {
@@ -74,26 +97,13 @@ scanBtn.addEventListener("click", async () => {
             }),
         });
         const data = await res.json();
-
-        if (data.verified) {
-            document.getElementById("resultPhoto").src = data.photo_url;
-            document.getElementById("resultName").textContent = data.full_name;
-            document.getElementById("resultRole").textContent = data.role;
-            document.getElementById("resultDept").textContent = data.department;
-            document.getElementById("resultBadge").innerHTML = '<span class="badge bg-success fs-5">VERIFIED</span>';
-        } else {
-            document.getElementById("resultPhoto").src = "";
-            document.getElementById("resultName").textContent = "";
-            document.getElementById("resultRole").textContent = "";
-            document.getElementById("resultDept").textContent = "";
-            document.getElementById("resultBadge").innerHTML = '<span class="badge bg-danger fs-5">UNKNOWN PERSON</span>';
-        }
-        panel.style.display = "block";
+        setTimeout(() => showResult(data), 400);
     } catch {
         document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
     } finally {
         scanBtn.disabled = false;
         spinner.style.display = "none";
+        overlay.classList.remove("active");
     }
 });
 </script>

@@ -522,3 +522,113 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
 video {
   border-radius: var(--radius) !important;
 }
+
+/* ── Webcam Frame ──────────────────────────────── */
+
+.webcam-frame {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  aspect-ratio: 4 / 3;
+}
+.webcam-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0 !important;
+}
+
+/* ── Scan Overlay ──────────────────────────────── */
+
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+.scan-overlay.active {
+  display: block;
+}
+.scan-line {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--green-500), transparent);
+  box-shadow: 0 0 16px var(--green-500), 0 0 32px rgba(46, 125, 50, 0.4);
+  animation: scanPulse 1.5s ease-in-out infinite;
+}
+@keyframes scanPulse {
+  0% { top: 8%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 92%; opacity: 0; }
+}
+.scan-corner-tl,
+.scan-corner-tr,
+.scan-corner-bl,
+.scan-corner-br {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: var(--green-500);
+  border-style: solid;
+}
+.scan-corner-tl { top: 8px; left: 8px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.scan-corner-tr { top: 8px; right: 8px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.scan-corner-bl { bottom: 8px; left: 8px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.scan-corner-br { bottom: 8px; right: 8px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+/* ── Result Card ───────────────────────────────── */
+
+.result-card {
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+.result-card .result-icon {
+  font-size: 3.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+.result-card h3 {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.result-card p {
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+.result-card .result-sub {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.result-card.verified {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  border: 2px solid var(--green-500);
+  box-shadow: 0 4px 20px rgba(46, 125, 50, 0.15);
+}
+.result-card.verified .result-icon {
+  color: var(--green-600);
+}
+.result-card.verified h3 {
+  color: var(--green-700);
+}
+
+.result-card.unknown {
+  background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+  border: 2px solid var(--red-600);
+  box-shadow: 0 4px 20px rgba(198, 40, 40, 0.15);
+}
+.result-card.unknown .result-icon {
+  color: var(--red-600);
+}
+.result-card.unknown h3 {
+  color: var(--red-700);
+}
