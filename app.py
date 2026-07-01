@@ -5,6 +5,8 @@ import pickle
 import tempfile
 import uuid
 
+from datetime import datetime
+
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
 from werkzeug.security import check_password_hash
 
@@ -65,6 +67,7 @@ def inject_user():
         "username": session.get("username", ""),
         "role": session.get("role", ""),
         "assigned_centre": session.get("assigned_centre", ""),
+        "now": datetime.now(),
     }
 
 

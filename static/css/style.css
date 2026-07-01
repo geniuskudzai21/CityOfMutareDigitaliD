@@ -309,6 +309,268 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
   color: var(--navy-900);
 }
 
+/* ── Login Page ────────────────────────────────── */
+
+body:has(.login-wrapper) {
+  background:
+    linear-gradient(135deg, rgba(15, 26, 46, 0.85) 0%, rgba(27, 42, 74, 0.75) 50%, rgba(22, 42, 74, 0.85) 100%),
+    url("/static/loginbg.png");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.login-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes loginFadeIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.login-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  padding: 2.5rem 2rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: loginFadeIn 0.5s ease-out;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--navy-800), var(--green-500), var(--navy-800));
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.login-title {
+  font-family: "Inter", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--navy-800);
+  margin-bottom: 0.2rem;
+}
+
+.login-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+  letter-spacing: 0.02em;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.login-card .input-group {
+  transition: transform 0.15s ease;
+}
+.login-card .input-group:focus-within {
+  transform: translateY(-1px);
+}
+
+.login-card .input-group-text {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-right: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  padding: 0.55rem 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.login-card .input-group .form-control {
+  border-left: none;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.login-card .input-group .form-control::placeholder {
+  color: #B0B8C4;
+  font-size: 0.875rem;
+}
+
+.login-card .input-group .form-control:focus {
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
+}
+
+.login-card .input-group:focus-within .input-group-text {
+  border-color: var(--green-500);
+  color: var(--green-600);
+  background: #F0F7F0;
+}
+
+.login-card .input-group:focus-within .form-control {
+  background: #FCFDFC;
+}
+
+.login-card .form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  padding-left: 0.15rem;
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.login-options .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0;
+  min-height: 0;
+  padding-left: 0;
+}
+
+.login-options .form-check-input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-radius: 4px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.login-options .form-check-input:checked {
+  background-color: var(--green-600);
+  border-color: var(--green-600);
+}
+.login-options .form-check-input:focus {
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
+}
+
+.login-options .form-check-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.login-forgot {
+  font-size: 0.82rem;
+  color: var(--green-600);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+.login-forgot:hover {
+  color: var(--green-700);
+  text-decoration: underline;
+}
+
+.login-btn {
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--navy-800), var(--navy-700));
+  border: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+.login-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%);
+  background-size: 200% 100%;
+  animation: btnShine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes btnShine {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+.login-btn:hover {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(27, 42, 74, 0.35);
+}
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(27, 42, 74, 0.2);
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1.75rem;
+  margin-bottom: 0;
+  letter-spacing: 0.02em;
+}
+
 /* ── Action Cards ──────────────────────────────── */
 
 .action-card {
