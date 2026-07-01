@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<h2 class="mb-4">Admin Dashboard</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Admin Dashboard</h2>
+</div>
 
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-lg-6 col-md-6">
@@ -22,28 +24,111 @@
         </div>
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6">
-        <div class="card stat-card text-bg-warning">
+        <div class="card stat-card text-bg-info" style="background:linear-gradient(135deg,var(--blue-600),#1E88E5)!important;border-color:transparent">
             <div class="card-body">
-                <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div class="stat-value">{{ stats.unknown_count }}</div>
-                <div class="stat-label">Unrecognized Faces</div>
+                <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+                <div class="stat-value">{{ stats.total_logs }}</div>
+                <div class="stat-label">Total Visit Records</div>
             </div>
         </div>
     </div>
-    <div class="col-xl-3 col-lg-6 col-md-6 d-flex align-items-stretch">
-        <div class="card shadow-sm w-100">
-            <div class="card-body d-flex flex-column gap-2">
-                <a href="/admin/enroll" class="btn btn-success">Enroll New Staff</a>
-                <a href="/verify" class="btn btn-primary">Verify Identity</a>
-                <a href="/admin/logs" class="btn btn-secondary">View All Logs</a>
-                <a href="/admin/unrecognized" class="btn btn-outline-danger">Review Unrecognized</a>
-                <a href="/admin/centres" class="btn btn-outline-dark">Manage Centres</a>
+    <div class="col-xl-3 col-lg-6 col-md-6">
+        <a href="/admin/unrecognized" class="text-decoration-none">
+            <div class="card stat-card text-bg-warning">
+                <div class="card-body">
+                    <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <div class="stat-value">{{ stats.unknown_count }}</div>
+                    <div class="stat-label">Unrecognized{% if stats.unknown_count > 0 %} &middot; Needs Review{% endif %}</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
-<h4 class="mb-3">Recent Unrecognized Scans</h4>
+<h4 class="mb-3">Quick Actions</h4>
+<div class="row g-3 mb-4">
+    <div class="col-xl col-lg-3 col-md-6">
+        <a href="/admin/enroll" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-0 action-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="action-icon bg-success-subtle">
+                        <i class="bi bi-person-plus-fill text-success"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Enroll Staff</div>
+                        <div class="text-muted small">Add new face records</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl col-lg-3 col-md-6">
+        <a href="/verify" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-0 action-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="action-icon bg-primary-subtle">
+                        <i class="bi bi-camera-fill text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Verify Identity</div>
+                        <div class="text-muted small">Scan &amp; log a visitor</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl col-lg-3 col-md-6">
+        <a href="/admin/logs" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-0 action-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="action-icon bg-info-subtle">
+                        <i class="bi bi-search text-info"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">View Logs</div>
+                        <div class="text-muted small">Filter &amp; export records</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl col-lg-3 col-md-6">
+        <a href="/admin/unrecognized" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-0 action-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="action-icon bg-warning-subtle">
+                        <i class="bi bi-question-circle-fill text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Unrecognized</div>
+                        <div class="text-muted small">Review flagged scans</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl col-lg-3 col-md-6">
+        <a href="/admin/centres" class="text-decoration-none">
+            <div class="card shadow-sm h-100 border-0 action-card">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="action-icon bg-secondary-subtle">
+                        <i class="bi bi-geo-alt-fill text-secondary"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Centres</div>
+                        <div class="text-muted small">Manage staff &amp; locations</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+{% if stats.recent_unknown %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Recent Unrecognized Scans</h4>
+    <a href="/admin/unrecognized" class="btn btn-outline-danger btn-sm">View All &rarr;</a>
+</div>
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-striped table-hover mb-0">
@@ -52,6 +137,7 @@
                     <th>Date / Time</th>
                     <th>Name</th>
                     <th>Site</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,25 +146,20 @@
                     <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.full_name or '—' }}</td>
                     <td>{{ log.site_name }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="3" class="p-0">
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
-                            <h6>No unrecognized scans</h6>
-                            <p>All recent scans have been successfully matched.</p>
-                        </div>
-                    </td>
+                    <td><span class="badge bg-danger">UNKNOWN</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if stats.recent_unknown %}
-    <div class="card-footer text-end">
-        <a href="/admin/unrecognized" class="btn btn-sm btn-outline-danger">View All Unrecognized &rarr;</a>
-    </div>
-    {% endif %}
 </div>
+{% else %}
+<div class="card shadow-sm">
+    <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
+        <h6>No unrecognized scans</h6>
+        <p class="mb-0">All recent scans have been successfully matched.</p>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

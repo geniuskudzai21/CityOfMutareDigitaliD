@@ -13,6 +13,7 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+{% if logged_in %}
 <header class="header">
     <div class="d-flex align-items-center gap-3">
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
@@ -23,7 +24,6 @@
             <span class="header-title">Council ID System</span>
         </a>
     </div>
-    {% if logged_in %}
     <div class="header-user">
         <div class="header-user-info">
             <div class="header-user-name">{{ username }}</div>
@@ -38,8 +38,8 @@
             <a href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
         </div>
     </div>
-    {% endif %}
 </header>
+{% endif %}
 
 {% if logged_in %}
 <nav class="sidebar" id="sidebar">
@@ -82,7 +82,7 @@
 </nav>
 {% endif %}
 
-<main class="main-content">
+<main class="main-content{% if not logged_in %} main-content--standalone{% endif %}">
     <div class="container-fluid">
         {% block content %}{% endblock %}
     </div>

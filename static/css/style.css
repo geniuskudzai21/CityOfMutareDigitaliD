@@ -242,6 +242,12 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
   padding-top: var(--header-height);
   min-height: 100vh;
 }
+.main-content--standalone {
+  margin-left: 0;
+  padding-top: 0;
+  display: flex;
+  align-items: center;
+}
 .main-content > .container-fluid {
   padding: 1.5rem 2rem;
 }
@@ -302,6 +308,33 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
   background: rgba(255,255,255,0.9);
   color: var(--navy-900);
 }
+
+/* ── Action Cards ──────────────────────────────── */
+
+.action-card {
+  transition: transform var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+  border-radius: var(--radius) !important;
+}
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+}
+.action-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.action-icon.bg-success-subtle { background: #E8F5E9 !important; }
+.action-icon.bg-primary-subtle { background: #E3F2FD !important; }
+.action-icon.bg-info-subtle { background: #E0F7FA !important; }
+.action-icon.bg-warning-subtle { background: #FFF3E0 !important; }
+.action-icon.bg-secondary-subtle { background: #F3F4F6 !important; }
 
 /* ── Empty State ───────────────────────────────── */
 
