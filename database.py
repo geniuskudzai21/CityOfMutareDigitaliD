@@ -34,10 +34,15 @@ def init_db(db_path):
             assigned_centre TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS centres (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        );
     """)
     conn.commit()
     conn.close()
     init_users(db_path)
+    init_centres(db_path)
 
 
 def init_users(db_path):
@@ -53,6 +58,17 @@ def init_users(db_path):
             "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
             default_users,
         )
+        conn.commit()
+    conn.close()
+
+
+def init_centres(db_path):
+    conn = get_connection(db_path)
+    existing = conn.execute("SELECT COUNT(*) FROM centres").fetchone()[0]
+    if existing == 0:
+        centres = ["Civic Centre", "Stores", "Housing", "Chikanga", "Hobhouse"]
+        for c in centres:
+            conn.execute("INSERT INTO centres (name) VALUES (?)", (c,))
         conn.commit()
     conn.close()
 
@@ -143,6 +159,30 @@ def get_user_by_username(db_path, username):
     row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def add_user(db_path, username, password, role, assigned_centre=None):
+    conn = get_connection(db_path)
+    conn.execute(
+        "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
+        (username, generate_password_hash(password), role, assigned_centre),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_all_staff(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("SELECT id, username, assigned_centre, created_at FROM users WHERE role = 'site_staff' ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_all_centres(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("SELECT id, name FROM centres ORDER BY name").fetchall()
+    conn.close()
+    return [r["name"] for r in rows]
 
 
 def get_dashboard_stats(db_path):

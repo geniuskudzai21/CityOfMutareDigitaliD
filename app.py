@@ -11,7 +11,10 @@ from werkzeug.security import check_password_hash
 from database import (
     add_employee,
     add_log,
+    add_user,
+    get_all_centres,
     get_all_employees,
+    get_all_staff,
     get_dashboard_stats,
     get_distinct_sites,
     get_filtered_logs,
@@ -205,6 +208,28 @@ def logs():
     log_entries = get_filtered_logs(db_path, date, site, name)
     sites = get_distinct_sites(db_path)
     return render_template("logs.html", logs=log_entries, sites=sites, selected_date=date, selected_site=site, selected_name=name)
+
+
+@app.route("/admin/centres", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
+def admin_centres():
+    centres = get_all_centres(db_path)
+    staff_list = get_all_staff(db_path)
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        centre = request.form.get("centre")
+        error = None
+        if not username or not password:
+            error = "Username and password are required."
+        elif get_user_by_username(db_path, username):
+            error = "Username already exists."
+        if error:
+            return render_template("admin/centres.html", centres=centres, staff=staff_list, error=error, form=request.form)
+        add_user(db_path, username, password, "site_staff", centre)
+        return redirect(url_for("admin_centres"))
+    return render_template("admin/centres.html", centres=centres, staff=staff_list)
 
 
 if __name__ == "__main__":
