@@ -9,6 +9,9 @@
                 <input type="date" class="form-control" name="date" value="{{ selected_date or '' }}">
             </div>
             <div class="col-auto">
+                <input type="text" class="form-control" name="name" placeholder="Search name..." value="{{ selected_name or '' }}">
+            </div>
+            <div class="col-auto">
                 <select class="form-select" name="site">
                     <option value="">All Sites</option>
                     {% for s in sites %}

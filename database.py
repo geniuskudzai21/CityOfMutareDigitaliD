@@ -79,7 +79,7 @@ def get_all_logs(db_path):
     return [dict(r) for r in rows]
 
 
-def get_filtered_logs(db_path, date=None, site=None):
+def get_filtered_logs(db_path, date=None, site=None, name=None):
     query = """
         SELECT vl.*, e.full_name, e.role, e.department
         FROM visit_logs vl
@@ -93,6 +93,9 @@ def get_filtered_logs(db_path, date=None, site=None):
     if site:
         query += " AND vl.site_name = ?"
         params.append(site)
+    if name:
+        query += " AND e.full_name LIKE ?"
+        params.append(f"%{name}%")
     query += " ORDER BY vl.timestamp DESC"
     conn = get_connection(db_path)
     rows = conn.execute(query, params).fetchall()

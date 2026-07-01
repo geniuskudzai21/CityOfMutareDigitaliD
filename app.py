@@ -107,9 +107,10 @@ def verify():
 def logs():
     date = request.args.get("date")
     site = request.args.get("site")
-    log_entries = get_filtered_logs(db_path, date, site)
+    name = request.args.get("name")
+    log_entries = get_filtered_logs(db_path, date, site, name)
     sites = get_distinct_sites(db_path)
-    return render_template("logs.html", logs=log_entries, sites=sites, selected_date=date, selected_site=site)
+    return render_template("logs.html", logs=log_entries, sites=sites, selected_date=date, selected_site=site, selected_name=name)
 
 
 if __name__ == "__main__":
