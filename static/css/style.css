@@ -325,8 +325,6 @@ body:has(.login-wrapper)::before {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2x);
   z-index: 0;
 }
 
@@ -353,10 +351,10 @@ body:has(.login-wrapper)::before {
   width: 100%;
   max-width: 360px;
   position: relative;
-  left: 30px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  left: 180px;
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
@@ -498,7 +496,7 @@ body:has(.login-wrapper)::before {
 }
 
 .login-card .input-group:focus-within .form-control {
-  background: #FCFDFC;
+  background: rgba(200, 200, 200, 0.25);
 }
 
 .login-card .form-label {

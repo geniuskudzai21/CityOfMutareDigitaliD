@@ -14,17 +14,23 @@ from database import (
     add_employee,
     add_log,
     add_user,
+    delete_user,
     get_all_centres,
     get_all_employees,
     get_all_staff,
+    get_all_users,
     get_dashboard_stats,
     get_distinct_sites,
     get_filtered_logs,
     get_staff_recent_logs,
     get_today_centre_visits,
     get_unrecognized_logs,
+    get_user_by_id,
     get_user_by_username,
     init_db,
+    set_user_active,
+    update_user,
+    update_user_password,
 )
 from face_utils import encode_face, match_face
 
@@ -33,6 +39,7 @@ app.secret_key = os.urandom(32).hex()
 
 db_path = os.path.join(app.instance_path, "database.db")
 PHOTO_DIR = os.path.join(app.static_folder, "enrolled_photos")
+UNRECOGNIZED_PHOTO_DIR = os.path.join(app.static_folder, "unrecognized_photos")
 
 with app.app_context():
     init_db(db_path)
@@ -179,13 +186,13 @@ def verify():
     header, encoded = data["photo"].split(",", 1)
     image_data = base64.b64decode(encoded)
 
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-        tmp.write(image_data)
-        tmp_path = tmp.name
-
     site_name = data.get("site_name", "Main Gate")
     purpose = data.get("purpose")
     notes = data.get("notes")
+
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(image_data)
+        tmp_path = tmp.name
 
     unknown_encoding = encode_face(tmp_path)
     os.remove(tmp_path)
@@ -216,7 +223,13 @@ def verify():
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
         })
 
-    add_log(db_path, None, site_name, "unknown", purpose, notes)
+    filename = f"{uuid.uuid4().hex}.jpg"
+    photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+    os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+    with open(photo_path, "wb") as f:
+        f.write(image_data)
+
+    add_log(db_path, None, site_name, "unknown", purpose, notes, unrecognized_photo_path=photo_path)
     return jsonify({"verified": False})
 
 
@@ -297,6 +310,88 @@ def admin_logs():
 def admin_unrecognized():
     logs = get_unrecognized_logs(db_path)
     return render_template("admin/unrecognized.html", logs=logs)
+
+
+@app.route("/admin/users", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
+def admin_users():
+    users = get_all_users(db_path)
+    centres = get_all_centres(db_path)
+    edit_target = None
+    edit_id = request.args.get("edit")
+    if edit_id:
+        edit_target = get_user_by_id(db_path, int(edit_id))
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        role = request.form.get("role")
+        assigned_centre = request.form.get("assigned_centre") or None
+        error = None
+        if not username or not password:
+            error = "Username and password are required."
+        elif get_user_by_username(db_path, username):
+            error = "Username already exists."
+        if error:
+            return render_template("admin/users.html", users=users, centres=centres, error=error, form=request.form, edit_target=edit_target)
+        add_user(db_path, username, password, role, assigned_centre)
+        return redirect(url_for("admin_users"))
+    return render_template("admin/users.html", users=users, centres=centres, edit_target=edit_target)
+
+
+@app.route("/admin/users/<int:user_id>/edit", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_edit_user(user_id):
+    user = get_user_by_id(db_path, user_id)
+    if not user:
+        return redirect(url_for("admin_users"))
+    username = request.form.get("username")
+    role = request.form.get("role")
+    assigned_centre = request.form.get("assigned_centre") or None
+    error = None
+    if not username:
+        error = "Username is required."
+    elif username != user["username"] and get_user_by_username(db_path, username):
+        error = "Username already exists."
+    if error:
+        users = get_all_users(db_path)
+        centres = get_all_centres(db_path)
+        return render_template("admin/users.html", users=users, centres=centres, edit_error=error, edit_target=user)
+    update_user(db_path, user_id, username, role, assigned_centre)
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/<int:user_id>/toggle-status", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_toggle_user(user_id):
+    user = get_user_by_id(db_path, user_id)
+    if user:
+        set_user_active(db_path, user_id, not user["active"])
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_delete_user(user_id):
+    user = get_user_by_id(db_path, user_id)
+    if user and user["username"] != session.get("username"):
+        delete_user(db_path, user_id)
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/<int:user_id>/reset-password", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_reset_password(user_id):
+    user = get_user_by_id(db_path, user_id)
+    if user:
+        new_password = request.form.get("new_password")
+        if new_password:
+            update_user_password(db_path, user_id, new_password)
+    return redirect(url_for("admin_users"))
 
 
 @app.route("/admin/centres", methods=["GET", "POST"])

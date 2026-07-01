@@ -7,6 +7,7 @@
         <table class="table table-striped table-hover mb-0">
             <thead class="table-dark">
                 <tr>
+                    <th>Photo</th>
                     <th>Date / Time</th>
                     <th>Site</th>
                     <th>Name</th>
@@ -18,6 +19,13 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
+                    <td>
+                        {% if log.unrecognized_photo_path %}
+                        <img src="/{{ log.unrecognized_photo_path.replace('\\', '/') }}" alt="Unknown face" class="rounded" style="width:60px;height:60px;object-fit:cover;">
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
                     <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.site_name }}</td>
                     <td>{{ log.full_name or '—' }}</td>
@@ -27,7 +35,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="p-0">
+                    <td colspan="7" class="p-0">
                         <div class="empty-state">
                             <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
                             <h6>Queue is clear</h6>
