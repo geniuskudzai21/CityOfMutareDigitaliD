@@ -19,9 +19,7 @@
             <i class="bi bi-list"></i>
         </button>
         <a href="/" class="header-brand">
-            <div class="header-logo">
-                <i class="bi bi-building"></i>
-            </div>
+            <img src="{{ url_for('static', filename='mutarelogo.png') }}" alt="Mutare" class="header-logo-img">
             <span class="header-title">Council ID System</span>
         </a>
     </div>
@@ -72,6 +70,9 @@
     </a>
     <a href="/staff/verify" class="sidebar-link {% if request.path == '/staff/verify' %}active{% endif %}">
         <i class="bi bi-camera"></i> Verify
+    </a>
+    <a href="/staff/logs" class="sidebar-link {% if request.path == '/staff/logs' %}active{% endif %}">
+        <i class="bi bi-journal-text"></i> Logs
     </a>
     {% endif %}
     <div class="sidebar-spacer"></div>

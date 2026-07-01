@@ -114,9 +114,18 @@ def admin_dashboard():
 @role_required("site_staff")
 def staff_dashboard():
     centre = session.get("assigned_centre", "")
-    recent_logs = get_staff_recent_logs(db_path, centre)
+    recent_logs = get_staff_recent_logs(db_path, centre, limit=5)
     today_count = get_today_centre_visits(db_path, centre)
     return render_template("staff_dashboard.html", centre=centre, logs=recent_logs, today_count=today_count)
+
+
+@app.route("/staff/logs")
+@login_required
+@role_required("site_staff")
+def staff_logs():
+    centre = session.get("assigned_centre", "")
+    all_logs = get_staff_recent_logs(db_path, centre)
+    return render_template("staff/logs.html", centre=centre, logs=all_logs)
 
 
 @app.route("/admin/enroll", methods=["GET", "POST"])
