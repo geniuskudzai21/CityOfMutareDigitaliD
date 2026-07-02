@@ -40,8 +40,10 @@ body::before {
 }
 .welcome-card {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 1.5rem;
     padding: 40px 50px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.06);
@@ -92,11 +94,29 @@ body::before {
     0%, 100% { opacity: 0.4; }
     50%      { opacity: 1; }
 }
+.welcome-tagline {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid rgba(255, 255, 255, 0.7);
+    animation: typewriter 2.5s steps(30) 0.5s forwards, blinkCursor 0.8s step-end infinite;
+    max-width: 0;
+}
+@keyframes typewriter {
+    to { max-width: 30ch; }
+}
+@keyframes blinkCursor {
+    50% { border-color: transparent; }
+}
     </style>
 </head>
 <body>
     <div class="welcome-wrapper">
         <div class="welcome-card">
+            <div class="welcome-tagline">Get Authenticated. Secure Access.</div>
             <a href="/login" class="welcome-btn">
                 <i class="bi bi-box-arrow-in-right"></i>
                 Sign In
