@@ -52,10 +52,8 @@
                         <th>Name</th>
                         <th class="d-none d-md-table-cell">Role</th>
                         <th class="d-none d-lg-table-cell">Dept</th>
-                        <th class="d-none d-lg-table-cell">Centre</th>
                         <th>Site</th>
                         <th class="d-none d-xl-table-cell">Purpose</th>
-                        <th class="d-none d-xl-table-cell">Notes</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -66,10 +64,8 @@
                         <td>{{ log.full_name or '—' }}</td>
                         <td class="d-none d-md-table-cell">{{ log.role or '—' }}</td>
                         <td class="d-none d-lg-table-cell">{{ log.department or '—' }}</td>
-                        <td class="d-none d-lg-table-cell">{{ log.centre or '—' }}</td>
                         <td>{{ log.site_name }}</td>
                         <td class="d-none d-xl-table-cell">{{ log.purpose or '—' }}</td>
-                        <td class="d-none d-xl-table-cell">{{ log.notes or '—' }}</td>
                         <td>
                             {% if log.status == 'verified' %}
                             <span class="badge bg-success">VERIFIED</span>
@@ -80,7 +76,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="9" class="p-0">
+                        <td colspan="7" class="p-0">
                             <div class="empty-state">
                                 <div class="empty-icon"><i class="bi bi-journal-text"></i></div>
                                 <h6>No logs found</h6>
