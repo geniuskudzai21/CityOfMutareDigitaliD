@@ -293,6 +293,13 @@ def get_all_centres(db_path):
     return [r["name"] for r in rows]
 
 
+def get_distinct_departments(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("SELECT DISTINCT department FROM employees WHERE department IS NOT NULL AND department != '' ORDER BY department").fetchall()
+    conn.close()
+    return [r["department"] for r in rows if r["department"]]
+
+
 def get_dashboard_stats(db_path):
     conn = get_connection(db_path)
     emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]

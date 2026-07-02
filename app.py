@@ -16,6 +16,7 @@ from database import (
     add_user,
     delete_user,
     get_all_centres,
+    get_distinct_departments,
     get_all_employees,
     get_all_staff,
     get_all_users,
@@ -149,7 +150,8 @@ def admin_enroll():
     if request.method == "POST":
         return handle_enroll(request.get_json())
     centres = get_all_centres(db_path)
-    return render_template("admin/enroll.html", centres=centres)
+    departments = get_distinct_departments(db_path)
+    return render_template("admin/enroll.html", centres=centres, departments=departments)
 
 
 def handle_enroll(data):
