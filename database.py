@@ -141,6 +141,30 @@ def add_log(db_path, employee_id, site_name, status, purpose=None, notes=None, u
     return log_id
 
 
+def delete_log(db_path, log_id):
+    conn = get_connection(db_path)
+    conn.execute("DELETE FROM visit_logs WHERE id = ?", (log_id,))
+    conn.commit()
+    conn.close()
+
+
+def update_log_employee(db_path, log_id, employee_id, status='verified'):
+    conn = get_connection(db_path)
+    conn.execute("UPDATE visit_logs SET employee_id = ?, status = ? WHERE id = ?", (employee_id, status, log_id))
+    conn.commit()
+    conn.close()
+
+
+def get_log_by_id(db_path, log_id):
+    conn = get_connection(db_path)
+    row = conn.execute(
+        "SELECT vl.*, e.full_name FROM visit_logs vl LEFT JOIN employees e ON vl.employee_id = e.id WHERE vl.id = ?",
+        (log_id,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def get_all_logs(db_path):
     conn = get_connection(db_path)
     rows = conn.execute("""

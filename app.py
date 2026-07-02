@@ -25,6 +25,9 @@ from database import (
     get_staff_recent_logs,
     get_today_centre_visits,
     get_unrecognized_logs,
+    delete_log,
+    update_log_employee,
+    get_log_by_id,
     get_user_by_id,
     get_user_by_username,
     init_db,
@@ -310,6 +313,38 @@ def admin_logs():
 def admin_unrecognized():
     logs = get_unrecognized_logs(db_path)
     return render_template("admin/unrecognized.html", logs=logs)
+
+
+@app.route("/admin/unrecognized/<int:log_id>/delete", methods=["POST"], endpoint="admin_unrecognized_delete")
+@login_required
+@role_required("admin")
+def admin_unrecognized_delete(log_id):
+    # Remove log entry
+    delete_log(db_path, log_id)
+    return redirect(url_for("admin_unrecognized"))
+
+
+@app.route("/admin/unrecognized/<int:log_id>/edit", methods=["GET", "POST"], endpoint="admin_unrecognized_edit")
+@login_required
+@role_required("admin")
+def admin_unrecognized_edit(log_id):
+    if request.method == "GET":
+        log = get_log_by_id(db_path, log_id)
+        if not log:
+            return redirect(url_for("admin_unrecognized"))
+        employees = get_all_employees(db_path)
+        return render_template("admin/unrecognized_edit.html", log=log, employees=employees)
+    # POST - assign to employee (mark verified)
+    employee_id = request.form.get("employee_id")
+    if employee_id:
+        try:
+            emp_id = int(employee_id)
+        except ValueError:
+            emp_id = None
+    else:
+        emp_id = None
+    update_log_employee(db_path, log_id, emp_id, status="verified")
+    return redirect(url_for("admin_unrecognized"))
 
 
 @app.route("/admin/users", methods=["GET", "POST"])

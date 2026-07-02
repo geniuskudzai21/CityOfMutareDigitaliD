@@ -10,10 +10,7 @@
                     <th>Photo</th>
                     <th>Date / Time</th>
                     <th>Site</th>
-                    <th>Name</th>
-                    <th class="d-none d-md-table-cell">Role</th>
-                    <th class="d-none d-md-table-cell">Department</th>
-                    <th class="d-none d-lg-table-cell">Centre</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -28,14 +25,20 @@
                     </td>
                     <td class="text-nowrap">{{ log.timestamp }}</td>
                     <td>{{ log.site_name }}</td>
-                    <td>{{ log.full_name or '—' }}</td>
-                    <td class="d-none d-md-table-cell">{{ log.role or '—' }}</td>
-                    <td class="d-none d-md-table-cell">{{ log.department or '—' }}</td>
-                    <td class="d-none d-lg-table-cell">{{ log.centre or '—' }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_unrecognized_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <form action="{{ url_for('admin_unrecognized_delete', log_id=log.id) }}" method="post" style="display:inline" onsubmit="return confirm('Delete this unrecognized log?');">
+                            <button type="submit" class="btn btn-link p-0 m-0 text-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="p-0">
+                    <td colspan="4" class="p-0">
                         <div class="empty-state">
                             <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
                             <h6>Queue is clear</h6>

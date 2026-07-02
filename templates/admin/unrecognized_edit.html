@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-4">Edit Unrecognized Log</h2>
+<div class="card shadow-sm p-3">
+    <div class="row g-3">
+        <div class="col-md-4">
+            {% if log.unrecognized_photo_path %}
+            <img src="/{{ log.unrecognized_photo_path.replace('\\','/') }}" alt="scan" class="img-fluid rounded">
+            {% else %}
+            <div class="text-muted">No photo</div>
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label">Date / Time</label>
+                    <div class="form-control">{{ log.timestamp }}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Site</label>
+                    <div class="form-control">{{ log.site_name }}</div>
+                </div>
+                <div class="mb-3">
+                    <label for="employee_id" class="form-label">Assign to Employee</label>
+                    <select name="employee_id" id="employee_id" class="form-select">
+                        <option value="">-- Select employee --</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.full_name }} {% if emp.centre %}— {{ emp.centre }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary">Save</button>
+                    <a href="{{ url_for('admin_unrecognized') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
