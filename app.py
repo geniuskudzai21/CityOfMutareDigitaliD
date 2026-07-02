@@ -111,7 +111,7 @@ def index():
         if session["role"] == "admin":
             return redirect(url_for("admin_dashboard"))
         return redirect(url_for("staff_dashboard"))
-    return redirect(url_for("login"))
+    return render_template("welcome.html")
 
 
 @app.route("/admin/dashboard")
@@ -182,17 +182,16 @@ def handle_enroll(data):
 
 @app.route("/verify", methods=["GET", "POST"])
 @login_required
-def verify():
+@role_required("admin")
+def admin_verify():
     if request.method == "GET":
-        return render_template("verify.html")
-    data = request.get_json()
+        centres = get_all_centres(db_path)
+        return render_template("verify.html", centres=centres)
 
+    data = request.get_json()
     header, encoded = data["photo"].split(",", 1)
     image_data = base64.b64decode(encoded)
-
-    site_name = data.get("site_name", "Main Gate")
-    purpose = data.get("purpose")
-    notes = data.get("notes")
+    site_name = data.get("site_name", "")
 
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
         tmp.write(image_data)
@@ -202,8 +201,66 @@ def verify():
     os.remove(tmp_path)
 
     if unknown_encoding is None:
-        add_log(db_path, None, site_name, "unknown", purpose, notes)
+        filename = f"{uuid.uuid4().hex}.jpg"
+        photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+        os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+        with open(photo_path, "wb") as f:
+            f.write(image_data)
+        add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
         return jsonify({"verified": False})
+
+    employees = get_all_employees(db_path)
+    known = []
+    for emp in employees:
+        if emp["face_encoding"]:
+            known.append((emp, pickle.loads(emp["face_encoding"])))
+
+    if not known:
+        filename = f"{uuid.uuid4().hex}.jpg"
+        photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+        os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+        with open(photo_path, "wb") as f:
+            f.write(image_data)
+        add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
+        return jsonify({"verified": False})
+
+    emp_list, enc_list = zip(*known)
+    idx = match_face(unknown_encoding, list(enc_list))
+    if idx is not None:
+        emp = emp_list[idx]
+        return jsonify({
+            "verified": True,
+            "employee_id": emp["id"],
+            "full_name": emp["full_name"],
+            "role": emp["role"],
+            "department": emp["department"],
+            "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
+        })
+
+    filename = f"{uuid.uuid4().hex}.jpg"
+    photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+    os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+    with open(photo_path, "wb") as f:
+        f.write(image_data)
+
+    add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
+    return jsonify({"verified": False})
+
+
+@app.route("/admin/confirm-visit", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_confirm_visit():
+    data = request.get_json()
+    add_log(
+        db_path,
+        data["employee_id"],
+        data.get("site_name", ""),
+        "verified",
+        data.get("purpose"),
+        data.get("notes"),
+    )
+    return jsonify({"success": True})
 
     employees = get_all_employees(db_path)
     known = []

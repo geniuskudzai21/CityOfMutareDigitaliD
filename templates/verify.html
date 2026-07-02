@@ -20,12 +20,10 @@
                     </div>
                     <div class="col-md-5 d-flex flex-column justify-content-center gap-2">
                         <select id="siteSelect" class="form-select">
-                            <option value="Civic Centre">Civic Centre</option>
-                            <option value="Sakubva">Sakubva</option>
-                            <option value="Hobhouse">Hobhouse</option>
+                            {% for c in centres %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
                         </select>
-                        <input type="text" id="purposeInput" class="form-control" placeholder="Purpose of visit (optional)">
-                        <input type="text" id="notesInput" class="form-control" placeholder="Notes (optional)">
                         <button type="button" id="scanBtn" class="btn btn-primary btn-lg mt-2">Scan Face</button>
                         <div id="spinner" class="text-center py-2" style="display: none;">
                             <div class="spinner-border text-primary" role="status">
@@ -36,7 +34,48 @@
                 </div>
                 <canvas id="captureCanvas" hidden></canvas>
                 <div id="statusMsg" class="mt-3"></div>
-                <div id="resultPanel" style="display: none;"></div>
+
+                <div id="resultPanel" style="display: none;">
+                    <div id="matchResult" style="display: none;">
+                        <div class="result-card verified mb-3">
+                            <div class="result-icon"><i class="bi bi-check-circle-fill"></i></div>
+                            <h3>MATCHED</h3>
+                            <p id="resultName"></p>
+                            <p id="resultRole"></p>
+                            <p class="result-sub" id="resultDept"></p>
+                        </div>
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h5 class="mb-3">Log Visit</h5>
+                                <div class="mb-3">
+                                    <label for="purposeSelect" class="form-label">Purpose of Visit</label>
+                                    <select id="purposeSelect" class="form-select">
+                                        <option value="">— Select —</option>
+                                        <option value="Meeting">Meeting</option>
+                                        <option value="Equipment Repair/Collection">Equipment Repair/Collection</option>
+                                        <option value="Delivery">Delivery</option>
+                                        <option value="Training">Training</option>
+                                        <option value="Site Inspection">Site Inspection</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notesInput" class="form-label">Notes (optional)</label>
+                                    <textarea id="notesInput" class="form-control" rows="2"></textarea>
+                                </div>
+                                <button type="button" id="confirmBtn" class="btn btn-success w-100">Confirm & Log Visit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="noMatchResult" style="display: none;">
+                        <div class="result-card unknown">
+                            <div class="result-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                            <h3>UNRECOGNIZED</h3>
+                            <p>Face did not match any enrolled record.</p>
+                            <p class="result-sub">This scan has been flagged for admin review.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -49,37 +88,21 @@
 const video = document.getElementById("webcam");
 const canvas = document.getElementById("captureCanvas");
 const scanBtn = document.getElementById("scanBtn");
+const confirmBtn = document.getElementById("confirmBtn");
 const spinner = document.getElementById("spinner");
 const overlay = document.getElementById("scanOverlay");
+let lastMatch = null;
 
 startWebcam(video);
 
-function showResult(data) {
-    const panel = document.getElementById("resultPanel");
-    if (data.verified) {
-        panel.innerHTML =
-            '<div class="result-card verified">' +
-            '<div class="result-icon"><i class="bi bi-check-circle-fill"></i></div>' +
-            '<h3>VERIFIED</h3>' +
-            '<p><strong>' + data.full_name + '</strong></p>' +
-            '<p>' + (data.role || '') + '</p>' +
-            '<p class="result-sub">' + (data.department || '') + '</p>' +
-            '</div>';
-    } else {
-        panel.innerHTML =
-            '<div class="result-card unknown">' +
-            '<div class="result-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>' +
-            '<h3>UNKNOWN PERSON</h3>' +
-            '<p>Face did not match any enrolled record.</p>' +
-            '<p class="result-sub">This scan has been flagged for admin review.</p>' +
-            '</div>';
-    }
-    panel.style.display = "block";
-}
-
 scanBtn.addEventListener("click", async () => {
     const photo = captureFrame(video, canvas);
-    document.getElementById("resultPanel").style.display = "none";
+    const panel = document.getElementById("resultPanel");
+    const matchResult = document.getElementById("matchResult");
+    const noMatchResult = document.getElementById("noMatchResult");
+    panel.style.display = "none";
+    matchResult.style.display = "none";
+    noMatchResult.style.display = "none";
     document.getElementById("statusMsg").innerHTML = "";
     scanBtn.disabled = true;
     spinner.style.display = "block";
@@ -92,18 +115,57 @@ scanBtn.addEventListener("click", async () => {
             body: JSON.stringify({
                 photo,
                 site_name: document.getElementById("siteSelect").value,
-                purpose: document.getElementById("purposeInput").value || null,
-                notes: document.getElementById("notesInput").value || null,
             }),
         });
         const data = await res.json();
-        setTimeout(() => showResult(data), 400);
+
+        setTimeout(() => {
+            if (data.verified) {
+                lastMatch = data;
+                document.getElementById("resultName").textContent = data.full_name;
+                document.getElementById("resultRole").textContent = data.role;
+                document.getElementById("resultDept").textContent = data.department;
+                matchResult.style.display = "block";
+            } else {
+                lastMatch = null;
+                noMatchResult.style.display = "block";
+            }
+            panel.style.display = "block";
+        }, 400);
     } catch {
         document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
     } finally {
         scanBtn.disabled = false;
         spinner.style.display = "none";
         overlay.classList.remove("active");
+    }
+});
+
+confirmBtn.addEventListener("click", async () => {
+    if (!lastMatch) return;
+    confirmBtn.disabled = true;
+    try {
+        const res = await fetch("/admin/confirm-visit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                employee_id: lastMatch.employee_id,
+                site_name: document.getElementById("siteSelect").value,
+                purpose: document.getElementById("purposeSelect").value || null,
+                notes: document.getElementById("notesInput").value || null,
+            }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("statusMsg").innerHTML = '<div class="alert alert-success">Visit logged successfully!</div>';
+            document.getElementById("matchResult").style.display = "none";
+            document.getElementById("resultPanel").style.display = "none";
+            lastMatch = null;
+        }
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error.</div>';
+    } finally {
+        confirmBtn.disabled = false;
     }
 });
 </script>
