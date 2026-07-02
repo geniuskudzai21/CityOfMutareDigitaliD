@@ -5,7 +5,8 @@
     <div class="row g-3">
         <div class="col-md-4">
             {% if log.unrecognized_photo_path %}
-            <img src="/{{ log.unrecognized_photo_path.replace('\\','/') }}" alt="scan" class="img-fluid rounded">
+            {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+            <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="scan" class="img-fluid rounded">
             {% else %}
             <div class="text-muted">No photo</div>
             {% endif %}
