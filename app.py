@@ -34,6 +34,7 @@ from database import (
     get_all_logs,
     get_user_by_username,
     init_db,
+    delete_orphaned_logs,
 )
 from face_utils import encode_face, match_face
 
@@ -46,6 +47,7 @@ UNRECOGNIZED_PHOTO_DIR = os.path.join(app.static_folder, "unrecognized_photos")
 
 with app.app_context():
     init_db(db_path)
+    delete_orphaned_logs(db_path)
 
 
 def login_required(route_function):

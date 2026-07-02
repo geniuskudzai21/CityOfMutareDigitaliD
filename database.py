@@ -355,3 +355,16 @@ def get_staff_recent_logs(db_path, centre, limit=20):
     """, (centre, limit)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def delete_orphaned_logs(db_path):
+    conn = get_connection(db_path)
+    result = conn.execute("""
+        DELETE FROM visit_logs
+        WHERE employee_id IS NOT NULL
+        AND employee_id NOT IN (SELECT id FROM employees)
+    """)
+    deleted = result.rowcount
+    conn.commit()
+    conn.close()
+    return deleted
