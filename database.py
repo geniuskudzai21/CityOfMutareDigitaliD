@@ -158,7 +158,7 @@ def update_log_employee(db_path, log_id, employee_id, status='verified'):
 def get_log_by_id(db_path, log_id):
     conn = get_connection(db_path)
     row = conn.execute(
-        "SELECT vl.*, e.full_name FROM visit_logs vl LEFT JOIN employees e ON vl.employee_id = e.id WHERE vl.id = ?",
+        "SELECT vl.*, e.full_name, e.role, e.department, e.centre AS emp_centre, e.photo_path AS emp_photo_path FROM visit_logs vl LEFT JOIN employees e ON vl.employee_id = e.id WHERE vl.id = ?",
         (log_id,),
     ).fetchone()
     conn.close()

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="card-title mb-0">Visit Details</h2>
+                        <div class="hint">View log entry information.</div>
+                    </div>
+                    <div class="ms-auto">
+                        <span class="badge {% if log.status == 'verified' %}bg-success{% else %}bg-danger{% endif %} fs-6">{{ log.status | upper }}</span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        {% if log.status == 'unknown' and log.unrecognized_photo_path %}
+                        {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center p-3">
+                                <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="img-fluid rounded" style="max-height:300px;object-fit:contain">
+                                <p class="text-muted small mt-2 mb-0">Unrecognized scan photo</p>
+                            </div>
+                        </div>
+                        {% elif log.emp_photo_path %}
+                        {% set _fname = log.emp_photo_path.replace('\\','/').split('/')[-1] %}
+                        <div class="card border-0 bg-light">
+                            <div class="card-body text-center p-3">
+                                <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="Employee" class="img-fluid rounded" style="max-height:300px;object-fit:contain">
+                                <p class="text-muted small mt-2 mb-0">Enrolled employee photo</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-7">
+                        <table class="table table-bordered mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light" style="width:140px">Date / Time</th>
+                                    <td>{{ log.timestamp }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Site</th>
+                                    <td>{{ log.site_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Status</th>
+                                    <td>
+                                        {% if log.status == 'verified' %}
+                                        <span class="badge bg-success">VERIFIED</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">UNKNOWN</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if log.full_name %}
+                                <tr>
+                                    <th class="bg-light">Name</th>
+                                    <td class="fw-semibold">{{ log.full_name }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if log.role %}
+                                <tr>
+                                    <th class="bg-light">Role</th>
+                                    <td>{{ log.role }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if log.department %}
+                                <tr>
+                                    <th class="bg-light">Department</th>
+                                    <td>{{ log.department }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if log.emp_centre %}
+                                <tr>
+                                    <th class="bg-light">Employee Centre</th>
+                                    <td>{{ log.emp_centre }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <th class="bg-light">Purpose</th>
+                                    <td>{{ log.purpose or '—' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Notes</th>
+                                    <td>{{ log.notes or '—' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-danger" data-delete-url="{{ url_for('admin_log_delete', log_id=log.id) }}" onclick="confirmDelete(this)">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                            <a href="{{ url_for('admin_logs') }}" class="btn btn-secondary ms-auto">Back to Logs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="text-danger mb-3" style="font-size:2.5rem">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <h5 class="mb-1">Confirm Delete</h5>
+                <p class="text-muted small mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" id="deleteForm">
+                    <button type="submit" class="btn btn-danger px-4">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+function confirmDelete(btn) {
+    document.getElementById('deleteForm').action = btn.getAttribute('data-delete-url');
+    deleteModal.show();
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -353,6 +353,16 @@ def admin_unrecognized_edit(log_id):
     return redirect(url_for("admin_log_edit", log_id=log_id))
 
 
+@app.route("/admin/logs/<int:log_id>/view")
+@login_required
+@role_required("admin")
+def admin_log_view(log_id):
+    log = get_log_by_id(db_path, log_id)
+    if not log:
+        return redirect(url_for("admin_logs"))
+    return render_template("admin/log_view.html", log=log)
+
+
 @app.route("/admin/logs/<int:log_id>/delete", methods=["POST"], endpoint="admin_log_delete")
 @login_required
 @role_required("admin")

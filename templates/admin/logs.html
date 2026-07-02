@@ -64,14 +64,12 @@
                         <td class="d-none d-lg-table-cell" style="width:130px">{{ log.department or '—' }}</td>
                         <td>{{ log.site_name }}</td>
                         <td>
-                            <a href="{{ url_for('admin_log_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
-                                <i class="bi bi-pencil-square"></i>
+                            <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
+                                <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
                             </a>
-                            <form action="{{ url_for('admin_log_delete', log_id=log.id) }}" method="post" style="display:inline" onsubmit="return confirm('Delete this log entry?');">
-                                <button type="submit" class="btn btn-link p-0 m-0 text-danger" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-link p-0 m-0 text-danger align-baseline" title="Delete" data-delete-url="{{ url_for('admin_log_delete', log_id=log.id) }}" onclick="confirmDelete(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     {% else %}
@@ -117,14 +115,12 @@
                         <td class="text-nowrap">{{ log.timestamp }}</td>
                         <td>{{ log.site_name }}</td>
                         <td>
-                            <a href="{{ url_for('admin_log_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
-                                <i class="bi bi-pencil-square"></i>
+                            <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
+                                <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
                             </a>
-                            <form action="{{ url_for('admin_log_delete', log_id=log.id) }}" method="post" style="display:inline" onsubmit="return confirm('Delete this log entry?');">
-                                <button type="submit" class="btn btn-link p-0 m-0 text-danger" title="Delete">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-link p-0 m-0 text-danger align-baseline" title="Delete" data-delete-url="{{ url_for('admin_log_delete', log_id=log.id) }}" onclick="confirmDelete(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     {% else %}
@@ -161,4 +157,35 @@
 </div>
 {% endif %}
 {% endfor %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="text-danger mb-3" style="font-size:2.5rem">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <h5 class="mb-1">Confirm Delete</h5>
+                <p class="text-muted small mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" id="deleteForm">
+                    <button type="submit" class="btn btn-danger px-4">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+function confirmDelete(btn) {
+    document.getElementById('deleteForm').action = btn.getAttribute('data-delete-url');
+    deleteModal.show();
+}
+</script>
+{% endblock %}
 {% endblock %}
