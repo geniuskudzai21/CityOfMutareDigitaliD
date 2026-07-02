@@ -16,10 +16,10 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td>
+                    <td style="cursor:pointer">
                         {% if log.unrecognized_photo_path %}
                         {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
-                        <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="rounded" style="width:60px;height:60px;object-fit:cover;">
+                        <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="rounded" style="width:60px;height:60px;object-fit:cover;" data-bs-toggle="modal" data-bs-target="#photoModal{{ log.id }}">
                         {% else %}
                         <span class="text-muted">—</span>
                         {% endif %}
@@ -53,4 +53,22 @@
     </div>
 </div>
 <a href="/admin/dashboard" class="btn btn-secondary mt-3">&larr; Back to Dashboard</a>
+
+{% for log in logs %}
+{% if log.unrecognized_photo_path %}
+{% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+<div class="modal fade" id="photoModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0" style="background:transparent;box-shadow:none">
+            <div class="modal-body p-0 text-center">
+                <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="img-fluid rounded shadow-lg" style="max-height:85vh;object-fit:contain">
+            </div>
+            <div class="text-center mt-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
 {% endblock %}

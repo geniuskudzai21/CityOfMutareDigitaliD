@@ -23,7 +23,6 @@
                     {% endfor %}
                 </select>
             </div>
-            <!-- Centre filter removed per UI requirement -->
             <div class="col-lg-2 col-md-4 col-6">
                 <select class="form-select" name="status">
                     <option value="">All Status</option>
@@ -37,36 +36,33 @@
             </div>
         </form>
 
-        <div class="table-responsive">
+        {% set verified = logs | selectattr("status", "equalto", "verified") | list %}
+        {% set unknown = logs | selectattr("status", "equalto", "unknown") | list %}
+
+        <h5 class="mb-3">
+            <i class="bi bi-check-circle-fill text-success me-2"></i>Verified
+            <span class="text-muted small fw-normal">({{ verified|length }})</span>
+        </h5>
+        <div class="table-responsive mb-4">
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th>Date / Time</th>
+                        <th style="width:150px">Date / Time</th>
                         <th>Name</th>
                         <th class="d-none d-md-table-cell" style="width:110px">Role</th>
                         <th class="d-none d-lg-table-cell" style="width:130px">Dept</th>
                         <th>Site</th>
-                        <th class="d-none d-xl-table-cell">Purpose</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width:100px">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for log in logs %}
+                    {% for log in verified %}
                     <tr>
                         <td class="text-nowrap">{{ log.timestamp }}</td>
                         <td>{{ log.full_name or '—' }}</td>
                         <td class="d-none d-md-table-cell" style="width:110px">{{ log.role or '—' }}</td>
                         <td class="d-none d-lg-table-cell" style="width:130px">{{ log.department or '—' }}</td>
                         <td>{{ log.site_name }}</td>
-                        <td class="d-none d-xl-table-cell">{{ log.purpose or '—' }}</td>
-                        <td>
-                            {% if log.status == 'verified' %}
-                            <span class="badge bg-success">VERIFIED</span>
-                            {% else %}
-                            <span class="badge bg-danger">UNKNOWN</span>
-                            {% endif %}
-                        </td>
                         <td>
                             <a href="{{ url_for('admin_log_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
                                 <i class="bi bi-pencil-square"></i>
@@ -80,11 +76,64 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="p-0">
+                        <td colspan="6" class="p-0">
                             <div class="empty-state">
-                                <div class="empty-icon"><i class="bi bi-journal-text"></i></div>
-                                <h6>No logs found</h6>
-                                <p>Try adjusting your filters or check back after scans are recorded.</p>
+                                <div class="empty-icon"><i class="bi bi-check-circle"></i></div>
+                                <h6>No verified visits</h6>
+                                <p class="mb-0">No verified visits match the current filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h5 class="mb-3">
+            <i class="bi bi-question-circle-fill text-danger me-2"></i>Unrecognized
+            <span class="text-muted small fw-normal">({{ unknown|length }})</span>
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:80px">Photo</th>
+                        <th style="width:150px">Date / Time</th>
+                        <th>Site</th>
+                        <th style="width:100px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in unknown %}
+                    <tr>
+                        <td style="cursor:pointer">
+                            {% if log.unrecognized_photo_path %}
+                            {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+                            <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="scan" class="rounded" style="width:48px;height:48px;object-fit:cover" data-bs-toggle="modal" data-bs-target="#unknownPhotoModal{{ log.id }}">
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">{{ log.timestamp }}</td>
+                        <td>{{ log.site_name }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_log_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <form action="{{ url_for('admin_log_delete', log_id=log.id) }}" method="post" style="display:inline" onsubmit="return confirm('Delete this log entry?');">
+                                <button type="submit" class="btn btn-link p-0 m-0 text-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="p-0">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
+                                <h6>No unrecognized visits</h6>
+                                <p class="mb-0">All scans have been successfully matched.</p>
                             </div>
                         </td>
                     </tr>
@@ -94,4 +143,22 @@
         </div>
     </div>
 </div>
+
+{% for log in unknown %}
+{% if log.unrecognized_photo_path %}
+{% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+<div class="modal fade" id="unknownPhotoModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0" style="background:transparent;box-shadow:none">
+            <div class="modal-body p-0 text-center">
+                <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="img-fluid rounded shadow-lg" style="max-height:85vh;object-fit:contain">
+            </div>
+            <div class="text-center mt-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
 {% endblock %}

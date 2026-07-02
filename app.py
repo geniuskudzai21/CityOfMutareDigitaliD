@@ -312,40 +312,22 @@ def admin_logs():
 @login_required
 @role_required("admin")
 def admin_unrecognized():
-    logs = get_unrecognized_logs(db_path)
-    return render_template("admin/unrecognized.html", logs=logs)
+    return redirect(url_for("admin_logs"))
 
 
 @app.route("/admin/unrecognized/<int:log_id>/delete", methods=["POST"], endpoint="admin_unrecognized_delete")
 @login_required
 @role_required("admin")
 def admin_unrecognized_delete(log_id):
-    # Remove log entry
     delete_log(db_path, log_id)
-    return redirect(url_for("admin_unrecognized"))
+    return redirect(url_for("admin_logs"))
 
 
 @app.route("/admin/unrecognized/<int:log_id>/edit", methods=["GET", "POST"], endpoint="admin_unrecognized_edit")
 @login_required
 @role_required("admin")
 def admin_unrecognized_edit(log_id):
-    if request.method == "GET":
-        log = get_log_by_id(db_path, log_id)
-        if not log:
-            return redirect(url_for("admin_unrecognized"))
-        employees = get_all_employees(db_path)
-        return render_template("admin/unrecognized_edit.html", log=log, employees=employees)
-    # POST - assign to employee (mark verified)
-    employee_id = request.form.get("employee_id")
-    if employee_id:
-        try:
-            emp_id = int(employee_id)
-        except ValueError:
-            emp_id = None
-    else:
-        emp_id = None
-    update_log_employee(db_path, log_id, emp_id, status="verified")
-    return redirect(url_for("admin_unrecognized"))
+    return redirect(url_for("admin_log_edit", log_id=log_id))
 
 
 @app.route("/admin/logs/<int:log_id>/delete", methods=["POST"], endpoint="admin_log_delete")

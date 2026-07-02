@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-
 <div class="row justify-content-center">
-    <div class="col-12 col-lg-7">
+    <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-4">
@@ -14,69 +13,84 @@
                         <div class="hint">Update staff details below.</div>
                     </div>
                 </div>
-
                 <form method="post">
-                    <div class="row g-3 mb-3">
-                        {% if emp.photo_path %}
-                        {% set _fname = emp.photo_path.replace('\\','/').split('/')[-1] %}
-                        <div class="col-12 text-center mb-2">
-                            <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="photo" class="rounded border" style="width:215px;height:215px;object-fit:cover">
-                        </div>
-                        {% endif %}
-                        <div class="col-12">
-                            <label for="full_name" class="form-label">Full Name</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                                <input type="text" class="form-control form-control-lg" id="full_name" name="full_name" value="{{ emp.full_name }}" required>
+                    <div class="row align-items-start" style="--bs-gutter-x:30px;">
+                        <div class="col-lg-6">
+                            <div class="card border-0 bg-light mb-1" style="max-width:490px;width:100%;">
+                                <div class="card-body p-2 text-center">
+                                    {% if emp.photo_path %}
+                                    {% set _fname = emp.photo_path.replace('\\','/').split('/')[-1] %}
+                                    <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="photo" class="rounded border" style="width:100%;max-width:470px;aspect-ratio:4/3;object-fit:cover">
+                                    {% else %}
+                                    <div class="rounded bg-secondary-subtle d-flex align-items-center justify-content-center" style="width:100%;max-width:470px;aspect-ratio:4/3;margin:0 auto">
+                                        <i class="bi bi-person" style="font-size:4rem;color:var(--text-muted)"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="role" class="form-label">Role</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
-                                <input type="text" class="form-control" id="role" name="role" value="{{ emp.role or '' }}">
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="full_name" class="form-label">Full Name</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                            <input type="text" class="form-control form-control-lg" id="full_name" name="full_name" value="{{ emp.full_name }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-12 col-md-6">
+                                            <label for="role" class="form-label">Role</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
+                                                <input type="text" class="form-control" id="role" name="role" value="{{ emp.role or '' }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label for="department" class="form-label">Department</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                                <select class="form-select" id="department" name="department">
+                                                    <option value="">— Department —</option>
+                                                    {% for d in departments %}
+                                                    <option value="{{ d }}" {% if emp.department == d %}selected{% endif %}>{{ d }}</option>
+                                                    {% endfor %}
+                                                    <option value="__other__" {% if emp.department and emp.department not in departments %}selected{% endif %}>Other...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3 {% if not (emp.department and emp.department not in departments) %}d-none{% endif %}" id="otherDeptWrap">
+                                        <label for="department_other" class="form-label">Other Department</label>
+                                        <input type="text" class="form-control" id="department_other" name="department_other" value="{{ emp.department if emp.department and emp.department not in departments else '' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contact" class="form-label">Contact</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <input type="text" class="form-control" id="contact" name="contact" value="{{ emp.contact or '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="centre" class="form-label">Centre</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <select class="form-select" id="centre" name="centre">
+                                                <option value="">— Select —</option>
+                                                {% for c in centres %}
+                                                <option value="{{ c }}" {% if emp.centre == c %}selected{% endif %}>{{ c }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success btn-lg">Save Changes</button>
+                                        <a href="{{ url_for('admin_employees') }}" class="btn btn-secondary btn-lg">Cancel</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="department" class="form-label">Department</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-building"></i></span>
-                                <select class="form-select" id="department" name="department">
-                                    <option value="">— Department —</option>
-                                    {% for d in departments %}
-                                    <option value="{{ d }}" {% if emp.department == d %}selected{% endif %}>{{ d }}</option>
-                                    {% endfor %}
-                                    <option value="__other__" {% if emp.department and emp.department not in departments %}selected{% endif %}>Other...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12 {% if not (emp.department and emp.department not in departments) %}d-none{% endif %}" id="otherDeptWrap">
-                            <label for="department_other" class="form-label">Other Department</label>
-                            <input type="text" class="form-control" id="department_other" name="department_other" value="{{ emp.department if emp.department and emp.department not in departments else '' }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="contact" class="form-label">Contact</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                                <input type="text" class="form-control" id="contact" name="contact" value="{{ emp.contact or '' }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="centre" class="form-label">Site</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                <select class="form-select" id="centre" name="centre">
-                                    <option value="">— Select —</option>
-                                    {% for c in centres %}
-                                    <option value="{{ c }}" {% if emp.centre == c %}selected{% endif %}>{{ c }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success btn-lg flex-grow-1">Save Changes</button>
-                        <a href="{{ url_for('admin_employees') }}" class="btn btn-secondary btn-lg">Cancel</a>
                     </div>
                 </form>
             </div>
