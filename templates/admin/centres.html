@@ -49,9 +49,9 @@
                         <tbody>
                             {% for s in staff %}
                             <tr>
-                                <td>{{ s.username }}</td>
-                                <td>{{ s.assigned_centre or '—' }}</td>
-                                <td class="text-nowrap">{{ s.created_at }}</td>
+                                <td data-label="Username">{{ s.username }}</td>
+                                <td data-label="Assigned Centre">{{ s.assigned_centre or '—' }}</td>
+                                <td class="text-nowrap" data-label="Created">{{ s.created_at }}</td>
                             </tr>
                             {% else %}
                             <tr>

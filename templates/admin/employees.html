@@ -53,7 +53,7 @@
                 <tbody>
                     {% for emp in employees %}
                     <tr>
-                        <td class="align-middle" style="width:70px">
+                        <td class="align-middle" style="width:70px" data-label="Photo">
                             {% if emp.photo_path %}
                             {% set _fname = emp.photo_path.replace('\\','/').split('/')[-1] %}
                             <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="photo" class="rounded" style="width:48px;height:48px;object-fit:cover">
@@ -63,11 +63,11 @@
                             </div>
                             {% endif %}
                         </td>
-                        <td class="fw-semibold">{{ emp.full_name }}</td>
-                        <td>{{ emp.role or '—' }}</td>
-                        <td>{{ emp.department or '—' }}</td>
-                        <td>{{ emp.contact or '—' }}</td>
-                        <td>{{ emp.centre or '—' }}</td>
+                        <td class="fw-semibold" data-label="Name">{{ emp.full_name }}</td>
+                        <td data-label="Role">{{ emp.role or '—' }}</td>
+                        <td data-label="Department">{{ emp.department or '—' }}</td>
+                        <td data-label="Contact">{{ emp.contact or '—' }}</td>
+                        <td data-label="Site">{{ emp.centre or '—' }}</td>
                         <td>
                             <a href="{{ url_for('admin_employee_edit', emp_id=emp.id) }}" class="text-decoration-none me-2" title="Edit">
                                 <i class="bi bi-pencil-square text-primary" style="font-size:1.15rem"></i>

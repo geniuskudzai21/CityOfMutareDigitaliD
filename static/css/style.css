@@ -1160,3 +1160,56 @@ video {
 .result-card.unknown h3 {
   color: var(--red-700);
 }
+
+/* ── Responsive Tables (vertical cards on mobile) ── */
+
+@media (max-width: 768px) {
+  .table-responsive thead {
+    display: none;
+  }
+  .table-responsive tbody,
+  .table-responsive tr,
+  .table-responsive td {
+    display: block;
+    width: 100%;
+  }
+  .table-responsive tr {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    background: var(--white);
+  }
+  .table-responsive td,
+  .table-responsive td.d-none,
+  .table-responsive td.d-md-table-cell,
+  .table-responsive td.d-lg-table-cell {
+    padding: 0.35rem 0;
+    border: none !important;
+    text-align: left !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+  .table-responsive td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+  .table-responsive td:first-child {
+    padding-top: 0;
+  }
+  .table-responsive td:last-child {
+    padding-bottom: 0;
+  }
+  .table-responsive .empty-state {
+    display: block;
+  }
+  .table-responsive .empty-state td {
+    padding: 0 !important;
+  }
+}

@@ -16,7 +16,7 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td style="cursor:pointer">
+                    <td style="cursor:pointer" data-label="Photo">
                         {% if log.unrecognized_photo_path %}
                         {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
                         <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="rounded" style="width:60px;height:60px;object-fit:cover;" data-bs-toggle="modal" data-bs-target="#photoModal{{ log.id }}">
@@ -24,8 +24,8 @@
                         <span class="text-muted">—</span>
                         {% endif %}
                     </td>
-                    <td class="text-nowrap">{{ log.timestamp }}</td>
-                    <td>{{ log.site_name }}</td>
+                    <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
+                    <td data-label="Site">{{ log.site_name }}</td>
                     <td>
                         <a href="{{ url_for('admin_unrecognized_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
                             <i class="bi bi-pencil-square"></i>

@@ -133,16 +133,16 @@
                     {% else %}
                     {% set _fname = None %}
                     {% endif %}
-                    <td class="align-middle">
+                    <td class="align-middle" data-label="Image">
                         {% if _fname %}
                         <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="scan" class="rounded" style="width:64px;height:48px;object-fit:cover">
                         {% else %}
                         —
                         {% endif %}
                     </td>
-                    <td class="text-nowrap">{{ log.timestamp }}</td>
-                    <td>{{ log.site_name }}</td>
-                    <td><span class="badge bg-danger">UNKNOWN</span></td>
+                    <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
+                    <td data-label="Site">{{ log.site_name }}</td>
+                    <td data-label="Status"><span class="badge bg-danger">UNKNOWN</span></td>
                 </tr>
                 {% endfor %}
             </tbody>

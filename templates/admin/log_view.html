@@ -39,19 +39,20 @@
                         {% endif %}
                     </div>
                     <div class="col-lg-7">
+                        <div class="table-responsive">
                         <table class="table table-bordered mb-0">
                             <tbody>
                                 <tr>
                                     <th class="bg-light" style="width:140px">Date / Time</th>
-                                    <td>{{ log.timestamp }}</td>
+                                    <td data-label="Date / Time">{{ log.timestamp }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Site</th>
-                                    <td>{{ log.site_name }}</td>
+                                    <td data-label="Site">{{ log.site_name }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Status</th>
-                                    <td>
+                                    <td data-label="Status">
                                         {% if log.status == 'verified' %}
                                         <span class="badge bg-success">VERIFIED</span>
                                         {% else %}
@@ -62,37 +63,38 @@
                                 {% if log.full_name %}
                                 <tr>
                                     <th class="bg-light">Name</th>
-                                    <td class="fw-semibold">{{ log.full_name }}</td>
+                                    <td class="fw-semibold" data-label="Name">{{ log.full_name }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.role %}
                                 <tr>
                                     <th class="bg-light">Role</th>
-                                    <td>{{ log.role }}</td>
+                                    <td data-label="Role">{{ log.role }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.department %}
                                 <tr>
                                     <th class="bg-light">Department</th>
-                                    <td>{{ log.department }}</td>
+                                    <td data-label="Department">{{ log.department }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.emp_centre %}
                                 <tr>
                                     <th class="bg-light">Employee Centre</th>
-                                    <td>{{ log.emp_centre }}</td>
+                                    <td data-label="Employee Centre">{{ log.emp_centre }}</td>
                                 </tr>
                                 {% endif %}
                                 <tr>
                                     <th class="bg-light">Purpose</th>
-                                    <td>{{ log.purpose or '—' }}</td>
+                                    <td data-label="Purpose">{{ log.purpose or '—' }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Notes</th>
-                                    <td>{{ log.notes or '—' }}</td>
+                                    <td data-label="Notes">{{ log.notes or '—' }}</td>
                                 </tr>
                             </tbody>
                         </table>
+                        </div>
 
                         <div class="d-flex gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" data-delete-url="{{ url_for('admin_log_delete', log_id=log.id) }}" onclick="confirmDelete(this)">

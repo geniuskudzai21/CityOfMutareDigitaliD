@@ -18,10 +18,10 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td class="text-nowrap">{{ log.timestamp }}</td>
-                    <td>{{ log.full_name or '—' }}</td>
-                    <td class="d-none d-sm-table-cell">{{ log.role or '—' }}</td>
-                    <td>
+                    <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
+                    <td data-label="Name">{{ log.full_name or '—' }}</td>
+                    <td class="d-none d-sm-table-cell" data-label="Role">{{ log.role or '—' }}</td>
+                    <td data-label="Status">
                         {% if log.status == 'verified' %}
                         <span class="badge bg-success">VERIFIED</span>
                         {% else %}
