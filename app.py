@@ -251,15 +251,31 @@ def staff_verify():
         tmp_path = tmp.name
     unknown_encoding = encode_face(tmp_path)
     os.remove(tmp_path)
+    site_name = session.get("assigned_centre", "")
+
     if unknown_encoding is None:
+        filename = f"{uuid.uuid4().hex}.jpg"
+        photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+        os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+        with open(photo_path, "wb") as f:
+            f.write(image_data)
+        add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
         return jsonify({"verified": False, "error": "No face detected"})
+
     employees = get_all_employees(db_path)
     known = []
     for emp in employees:
         if emp["face_encoding"]:
             known.append((emp, pickle.loads(emp["face_encoding"])))
     if not known:
+        filename = f"{uuid.uuid4().hex}.jpg"
+        photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+        os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+        with open(photo_path, "wb") as f:
+            f.write(image_data)
+        add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
         return jsonify({"verified": False, "error": "No enrolled faces"})
+
     emp_list, enc_list = zip(*known)
     idx = match_face(unknown_encoding, list(enc_list))
     if idx is not None:
@@ -272,6 +288,13 @@ def staff_verify():
             "department": emp["department"],
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
         })
+
+    filename = f"{uuid.uuid4().hex}.jpg"
+    photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+    os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+    with open(photo_path, "wb") as f:
+        f.write(image_data)
+    add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
     return jsonify({"verified": False, "error": "No match found"})
 
 
@@ -427,6 +450,31 @@ def admin_employee_edit(emp_id):
 @role_required("admin")
 def admin_employee_delete(emp_id):
     delete_employee(db_path, emp_id)
+    return redirect(url_for("admin_employees"))
+
+
+@app.route("/admin/employees/<int:emp_id>/create-login", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_employee_create_login(emp_id):
+    emp = get_employee_by_id(db_path, emp_id)
+    if not emp:
+        return redirect(url_for("admin_employees"))
+    username = request.form.get("username")
+    password = request.form.get("password")
+    centre = request.form.get("centre") or emp.get("centre") or ""
+    error = None
+    if not username or not password:
+        error = "Username and password are required."
+    elif get_user_by_username(db_path, username):
+        error = f"Username '{username}' already exists."
+    if error:
+        employees = get_filtered_employees(db_path)
+        centres = get_all_centres(db_path)
+        departments = get_distinct_departments(db_path)
+        return render_template("admin/employees.html", employees=employees, centres=centres, departments=departments,
+                               login_error=error, login_emp_id=emp_id)
+    add_user(db_path, username, password, "site_staff", centre)
     return redirect(url_for("admin_employees"))
 
 

@@ -166,10 +166,14 @@ document.getElementById("enrollForm").addEventListener("submit", async (e) => {
         return;
     }
     const fd = new FormData(e.target);
+    var dept = fd.get("department");
+    if (dept === "__other__") {
+        dept = fd.get("department_other");
+    }
     const payload = {
         full_name: fd.get("full_name"),
         role: fd.get("role"),
-        department: fd.get("department"),
+        department: dept,
         contact: fd.get("contact"),
         centre: fd.get("centre"),
         photo: capturedImage,
@@ -184,9 +188,12 @@ document.getElementById("enrollForm").addEventListener("submit", async (e) => {
         const data = await res.json();
         if (data.success) {
             document.getElementById("statusMsg").innerHTML = '<div class="alert alert-success">Enrolled successfully!</div>';
-            // reset form
             document.getElementById('enrollForm').reset();
             capturedImage = null;
+            webcamFreeze.style.display = 'none';
+            try { if (video.srcObject) video.play(); } catch (e) {}
+            retakeBtnEl.classList.add('d-none');
+            captureBtn.classList.remove('d-none');
         } else {
             if (data.error && data.error.includes("No face detected")) {
                 photoError.textContent = data.error;
