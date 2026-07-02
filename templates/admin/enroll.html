@@ -4,15 +4,21 @@
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h2 class="card-title mb-3">Enroll Employee</h2>
-                <p class="text-muted mb-4">Capture a clear headshot and fill in the staff details to enroll an employee.</p>
+                <div class="enroll-intro mb-3">
+                    <div class="icon-wrap"><i class="bi bi-person-plus-fill" style="font-size:1.35rem"></i></div>
+                    <div>
+                        <h2 class="card-title mb-0">Enroll Employee</h2>
+                        <div class="hint">Capture a clear headshot and fill in staff details to enroll an employee.</div>
+                    </div>
+                </div>
                 <form id="enrollForm">
                     <div class="row g-4 align-items-start">
                         <div class="col-lg-7">
                             <div class="card border-0 bg-light mb-3">
-                                <div class="card-body p-3 text-center">
+                                    <div class="card-body p-3 text-center">
                                     <div class="webcam-frame mx-auto mb-3" style="max-width:1100px;">
                                         <video id="webcam" autoplay class="w-100 rounded" style="object-fit:cover"></video>
+                                        <img id="webcamFreeze" alt="Frozen frame" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;" />
                                         <div class="scan-overlay" id="scanOverlay">
                                             <div class="scan-line"></div>
                                             <div class="scan-corner-tl"></div>
@@ -29,31 +35,38 @@
                                     <div id="photoError" class="text-danger small mt-2" style="display: none;"></div>
                                 </div>
                             </div>
-                            <div class="text-center">
-                                <img id="photoPreview" class="img-fluid rounded border shadow-sm" style="max-height:320px; width:100%; object-fit:cover; display: none;">
-                            </div>
+                                    <!-- Preview shown in webcam space; no separate preview below -->
                         </div>
                         <div class="col-lg-5">
                             <div class="card shadow-sm">
                                 <div class="card-body">
                                     <div class="mb-3">
                                         <label for="full_name" class="form-label">Full Name</label>
-                                        <input type="text" class="form-control form-control-lg" id="full_name" name="full_name" required>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                            <input type="text" class="form-control form-control-lg" id="full_name" name="full_name" required>
+                                        </div>
                                     </div>
                                     <div class="row g-2 mb-3">
                                         <div class="col-6">
                                             <label for="role" class="form-label">Role</label>
-                                            <input type="text" class="form-control" id="role" name="role">
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-briefcase"></i></span>
+                                                <input type="text" class="form-control" id="role" name="role">
+                                            </div>
                                         </div>
                                         <div class="col-6">
                                             <label for="department" class="form-label">Department</label>
-                                            <select class="form-select" id="department" name="department">
-                                                <option value="">— Select Department —</option>
-                                                {% for d in departments %}
-                                                <option value="{{ d }}">{{ d }}</option>
-                                                {% endfor %}
-                                                <option value="__other__">Other...</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                                <select class="form-select" id="department" name="department">
+                                                    <option value="">— Select Department —</option>
+                                                    {% for d in departments %}
+                                                    <option value="{{ d }}">{{ d }}</option>
+                                                    {% endfor %}
+                                                    <option value="__other__">Other...</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mb-3 d-none" id="otherDeptWrap">
@@ -62,16 +75,22 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="contact" class="form-label">Contact</label>
-                                        <input type="text" class="form-control" id="contact" name="contact">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <input type="text" class="form-control" id="contact" name="contact">
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="centre" class="form-label">Centre</label>
-                                        <select class="form-select" id="centre" name="centre">
-                                            <option value="">— Select —</option>
-                                            {% for c in centres %}
-                                            <option value="{{ c }}">{{ c }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <select class="form-select" id="centre" name="centre">
+                                                <option value="">— Select —</option>
+                                                {% for c in centres %}
+                                                <option value="{{ c }}">{{ c }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-success btn-lg">Submit Enrollment</button>
@@ -100,14 +119,23 @@ const overlay = document.getElementById("scanOverlay");
 
 startWebcam(video);
 
-document.getElementById("captureBtn").addEventListener("click", () => {
+    const captureBtn = document.getElementById("captureBtn");
+    const retakeBtnEl = document.getElementById('retakeBtn');
+    const webcamFreeze = document.getElementById('webcamFreeze');
+    document.getElementById("captureBtn").addEventListener("click", () => {
     overlay.classList.add("active");
     setTimeout(() => {
         capturedImage = captureFrame(video, canvas);
-        document.getElementById("photoPreview").src = capturedImage;
-        document.getElementById("photoPreview").style.display = "block";
+        // show freeze over webcam and pause video
+        webcamFreeze.src = capturedImage;
+        webcamFreeze.style.display = 'block';
+        try { video.pause(); } catch (e) {}
+        // show freeze overlay and hide overlay
         photoError.style.display = "none";
         overlay.classList.remove("active");
+        // toggle buttons
+        captureBtn.classList.add('d-none');
+        retakeBtnEl.classList.remove('d-none');
     }, 500);
 });
 
@@ -121,11 +149,13 @@ document.getElementById('department').addEventListener('change', (e) => {
 });
 
 // Retake button logic
-const retakeBtn = document.getElementById('retakeBtn');
-retakeBtn.addEventListener('click', () => {
+retakeBtnEl.addEventListener('click', () => {
     capturedImage = null;
-    document.getElementById('photoPreview').style.display = 'none';
-    retakeBtn.classList.add('d-none');
+    webcamFreeze.style.display = 'none';
+    // resume video
+    try { if (video.srcObject) video.play(); } catch (e) {}
+    retakeBtnEl.classList.add('d-none');
+    captureBtn.classList.remove('d-none');
 });
 
 document.getElementById("enrollForm").addEventListener("submit", async (e) => {
@@ -157,7 +187,6 @@ document.getElementById("enrollForm").addEventListener("submit", async (e) => {
             // reset form
             document.getElementById('enrollForm').reset();
             capturedImage = null;
-            document.getElementById('photoPreview').style.display = 'none';
         } else {
             if (data.error && data.error.includes("No face detected")) {
                 photoError.textContent = data.error;
