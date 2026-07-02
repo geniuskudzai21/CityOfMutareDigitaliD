@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h2 class="mb-0">Users</h2>
+    <span class="text-muted small">{{ employees|length }} employee{% if employees|length != 1 %}s{% endif %}</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form class="row g-2 mb-4" method="get" action="/admin/employees">
+            <div class="col-lg-3 col-md-6">
+                <input type="text" class="form-control" name="name" placeholder="Search by name..." value="{{ selected_name or '' }}">
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <input type="text" class="form-control" name="role" placeholder="Search by role..." value="{{ selected_role or '' }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select class="form-select" name="department">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <select class="form-select" name="centre">
+                    <option value="">All Sites</option>
+                    {% for c in centres %}
+                    <option value="{{ c }}" {% if selected_centre == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                <a href="/admin/employees" class="btn btn-secondary flex-grow-1">Clear</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Photo</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Contact</th>
+                        <th>Site</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr>
+                        <td class="align-middle" style="width:70px">
+                            {% if emp.photo_path %}
+                            {% set _fname = emp.photo_path.replace('\\','/').split('/')[-1] %}
+                            <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="photo" class="rounded" style="width:48px;height:48px;object-fit:cover">
+                            {% else %}
+                            <div class="rounded bg-secondary-subtle d-flex align-items-center justify-content-center" style="width:48px;height:48px">
+                                <i class="bi bi-person text-secondary"></i>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold">{{ emp.full_name }}</td>
+                        <td>{{ emp.role or '—' }}</td>
+                        <td>{{ emp.department or '—' }}</td>
+                        <td>{{ emp.contact or '—' }}</td>
+                        <td>{{ emp.centre or '—' }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_employee_edit', emp_id=emp.id) }}" class="text-decoration-none me-2" title="Edit">
+                                <i class="bi bi-pencil-square text-primary" style="font-size:1.15rem"></i>
+                            </a>
+                            <form action="{{ url_for('admin_employee_delete', emp_id=emp.id) }}" method="post" style="display:inline" onsubmit="return confirm('Delete this employee? This action cannot be undone.');">
+                                <button type="submit" class="btn btn-link p-0 m-0 text-danger" title="Delete">
+                                    <i class="bi bi-trash" style="font-size:1.15rem"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="p-0">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="bi bi-people"></i></div>
+                                <h6>No employees found</h6>
+                                <p>Try adjusting your search or <a href="/admin/enroll">enroll a new employee</a>.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -20,7 +20,11 @@ from database import (
     get_all_staff,
     get_dashboard_stats,
     get_distinct_sites,
+    get_filtered_employees,
     get_filtered_logs,
+    get_employee_by_id,
+    update_employee,
+    delete_employee,
     get_staff_recent_logs,
     get_today_centre_visits,
     get_unrecognized_logs,
@@ -397,6 +401,51 @@ def admin_centres():
         add_user(db_path, username, password, "site_staff", centre)
         return redirect(url_for("admin_centres"))
     return render_template("admin/centres.html", centres=centres, staff=staff_list)
+
+
+@app.route("/admin/employees")
+@login_required
+@role_required("admin")
+def admin_employees():
+    name = request.args.get("name")
+    department = request.args.get("department")
+    role = request.args.get("role")
+    centre = request.args.get("centre")
+    employees = get_filtered_employees(db_path, name, department, role, centre)
+    centres = get_all_centres(db_path)
+    departments = get_distinct_departments(db_path)
+    return render_template("admin/employees.html", employees=employees, centres=centres, departments=departments,
+                           selected_name=name, selected_department=department, selected_role=role, selected_centre=centre)
+
+
+@app.route("/admin/employees/<int:emp_id>/edit", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
+def admin_employee_edit(emp_id):
+    emp = get_employee_by_id(db_path, emp_id)
+    if not emp:
+        return redirect(url_for("admin_employees"))
+    if request.method == "POST":
+        full_name = request.form.get("full_name")
+        role = request.form.get("role")
+        department = request.form.get("department")
+        if department == "__other__":
+            department = request.form.get("department_other", "")
+        contact = request.form.get("contact")
+        centre = request.form.get("centre")
+        update_employee(db_path, emp_id, full_name, role, department, contact, centre)
+        return redirect(url_for("admin_employees"))
+    centres = get_all_centres(db_path)
+    departments = get_distinct_departments(db_path)
+    return render_template("admin/employee_edit.html", emp=emp, centres=centres, departments=departments)
+
+
+@app.route("/admin/employees/<int:emp_id>/delete", methods=["POST"])
+@login_required
+@role_required("admin")
+def admin_employee_delete(emp_id):
+    delete_employee(db_path, emp_id)
+    return redirect(url_for("admin_employees"))
 
 
 if __name__ == "__main__":

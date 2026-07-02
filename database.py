@@ -252,6 +252,52 @@ def get_distinct_departments(db_path):
     return [r["department"] for r in rows if r["department"]]
 
 
+def get_filtered_employees(db_path, name=None, department=None, role=None, centre=None):
+    query = "SELECT * FROM employees WHERE 1=1"
+    params = []
+    if name:
+        query += " AND full_name LIKE ?"
+        params.append(f"%{name}%")
+    if department:
+        query += " AND department = ?"
+        params.append(department)
+    if role:
+        query += " AND role LIKE ?"
+        params.append(f"%{role}%")
+    if centre:
+        query += " AND centre = ?"
+        params.append(centre)
+    query += " ORDER BY created_at DESC"
+    conn = get_connection(db_path)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_employee_by_id(db_path, emp_id):
+    conn = get_connection(db_path)
+    row = conn.execute("SELECT * FROM employees WHERE id = ?", (emp_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def update_employee(db_path, emp_id, full_name, role, department, contact, centre):
+    conn = get_connection(db_path)
+    conn.execute(
+        "UPDATE employees SET full_name = ?, role = ?, department = ?, contact = ?, centre = ? WHERE id = ?",
+        (full_name, role, department, contact, centre, emp_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_employee(db_path, emp_id):
+    conn = get_connection(db_path)
+    conn.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
+    conn.commit()
+    conn.close()
+
+
 def get_dashboard_stats(db_path):
     conn = get_connection(db_path)
     emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
