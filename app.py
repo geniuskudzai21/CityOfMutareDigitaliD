@@ -14,12 +14,10 @@ from database import (
     add_employee,
     add_log,
     add_user,
-    delete_user,
     get_all_centres,
     get_distinct_departments,
     get_all_employees,
     get_all_staff,
-    get_all_users,
     get_dashboard_stats,
     get_distinct_sites,
     get_filtered_logs,
@@ -30,12 +28,8 @@ from database import (
     update_log_employee,
     get_log_by_id,
     get_all_logs,
-    get_user_by_id,
     get_user_by_username,
     init_db,
-    set_user_active,
-    update_user,
-    update_user_password,
 )
 from face_utils import encode_face, match_face
 
@@ -381,87 +375,6 @@ def admin_log_edit(log_id):
     conn.close()
     return redirect(url_for("admin_logs"))
 
-
-@app.route("/admin/users", methods=["GET", "POST"])
-@login_required
-@role_required("admin")
-def admin_users():
-    users = get_all_users(db_path)
-    centres = get_all_centres(db_path)
-    edit_target = None
-    edit_id = request.args.get("edit")
-    if edit_id:
-        edit_target = get_user_by_id(db_path, int(edit_id))
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        role = request.form.get("role")
-        assigned_centre = request.form.get("assigned_centre") or None
-        error = None
-        if not username or not password:
-            error = "Username and password are required."
-        elif get_user_by_username(db_path, username):
-            error = "Username already exists."
-        if error:
-            return render_template("admin/users.html", users=users, centres=centres, error=error, form=request.form, edit_target=edit_target)
-        add_user(db_path, username, password, role, assigned_centre)
-        return redirect(url_for("admin_users"))
-    return render_template("admin/users.html", users=users, centres=centres, edit_target=edit_target)
-
-
-@app.route("/admin/users/<int:user_id>/edit", methods=["POST"])
-@login_required
-@role_required("admin")
-def admin_edit_user(user_id):
-    user = get_user_by_id(db_path, user_id)
-    if not user:
-        return redirect(url_for("admin_users"))
-    username = request.form.get("username")
-    role = request.form.get("role")
-    assigned_centre = request.form.get("assigned_centre") or None
-    error = None
-    if not username:
-        error = "Username is required."
-    elif username != user["username"] and get_user_by_username(db_path, username):
-        error = "Username already exists."
-    if error:
-        users = get_all_users(db_path)
-        centres = get_all_centres(db_path)
-        return render_template("admin/users.html", users=users, centres=centres, edit_error=error, edit_target=user)
-    update_user(db_path, user_id, username, role, assigned_centre)
-    return redirect(url_for("admin_users"))
-
-
-@app.route("/admin/users/<int:user_id>/toggle-status", methods=["POST"])
-@login_required
-@role_required("admin")
-def admin_toggle_user(user_id):
-    user = get_user_by_id(db_path, user_id)
-    if user:
-        set_user_active(db_path, user_id, not user["active"])
-    return redirect(url_for("admin_users"))
-
-
-@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
-@login_required
-@role_required("admin")
-def admin_delete_user(user_id):
-    user = get_user_by_id(db_path, user_id)
-    if user and user["username"] != session.get("username"):
-        delete_user(db_path, user_id)
-    return redirect(url_for("admin_users"))
-
-
-@app.route("/admin/users/<int:user_id>/reset-password", methods=["POST"])
-@login_required
-@role_required("admin")
-def admin_reset_password(user_id):
-    user = get_user_by_id(db_path, user_id)
-    if user:
-        new_password = request.form.get("new_password")
-        if new_password:
-            update_user_password(db_path, user_id, new_password)
-    return redirect(url_for("admin_users"))
 
 
 @app.route("/admin/centres", methods=["GET", "POST"])

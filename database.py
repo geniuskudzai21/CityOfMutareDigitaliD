@@ -238,54 +238,6 @@ def get_all_staff(db_path):
     return [dict(r) for r in rows]
 
 
-def get_all_users(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT id, username, role, assigned_centre, active, created_at FROM users ORDER BY created_at DESC").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
-
-
-def get_user_by_id(db_path, user_id):
-    conn = get_connection(db_path)
-    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
-def update_user(db_path, user_id, username, role, assigned_centre):
-    conn = get_connection(db_path)
-    conn.execute(
-        "UPDATE users SET username = ?, role = ?, assigned_centre = ? WHERE id = ?",
-        (username, role, assigned_centre, user_id),
-    )
-    conn.commit()
-    conn.close()
-
-
-def update_user_password(db_path, user_id, new_password):
-    conn = get_connection(db_path)
-    conn.execute(
-        "UPDATE users SET password_hash = ? WHERE id = ?",
-        (generate_password_hash(new_password), user_id),
-    )
-    conn.commit()
-    conn.close()
-
-
-def set_user_active(db_path, user_id, active):
-    conn = get_connection(db_path)
-    conn.execute("UPDATE users SET active = ? WHERE id = ?", (1 if active else 0, user_id))
-    conn.commit()
-    conn.close()
-
-
-def delete_user(db_path, user_id):
-    conn = get_connection(db_path)
-    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
-
-
 def get_all_centres(db_path):
     conn = get_connection(db_path)
     rows = conn.execute("SELECT id, name FROM centres ORDER BY name").fetchall()
