@@ -28,6 +28,7 @@ from database import (
     delete_log,
     update_log_employee,
     get_log_by_id,
+    get_all_logs,
     get_user_by_id,
     get_user_by_username,
     init_db,
@@ -345,6 +346,38 @@ def admin_unrecognized_edit(log_id):
         emp_id = None
     update_log_employee(db_path, log_id, emp_id, status="verified")
     return redirect(url_for("admin_unrecognized"))
+
+
+@app.route("/admin/logs/<int:log_id>/delete", methods=["POST"], endpoint="admin_log_delete")
+@login_required
+@role_required("admin")
+def admin_log_delete(log_id):
+    delete_log(db_path, log_id)
+    return redirect(url_for("admin_logs"))
+
+
+@app.route("/admin/logs/<int:log_id>/edit", methods=["GET", "POST"], endpoint="admin_log_edit")
+@login_required
+@role_required("admin")
+def admin_log_edit(log_id):
+    # Simple edit: allow updating purpose and notes and assigning employee
+    from database import get_log_by_id as _get_log_by_id
+    if request.method == "GET":
+        log = _get_log_by_id(db_path, log_id)
+        if not log:
+            return redirect(url_for("admin_logs"))
+        employees = get_all_employees(db_path)
+        return render_template("admin/log_edit.html", log=log, employees=employees)
+    # POST
+    employee_id = request.form.get("employee_id")
+    purpose = request.form.get("purpose")
+    notes = request.form.get("notes")
+    conn = get_connection(db_path)
+    conn.execute("UPDATE visit_logs SET employee_id = ?, purpose = ?, notes = ?, status = ? WHERE id = ?",
+                 (int(employee_id) if employee_id else None, purpose, notes, 'verified' if employee_id else 'unknown', log_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_logs"))
 
 
 @app.route("/admin/users", methods=["GET", "POST"])
