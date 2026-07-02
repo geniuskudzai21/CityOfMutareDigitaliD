@@ -26,7 +26,7 @@
   --shadow-lg: 0 8px 24px rgba(15, 26, 46, 0.12);
   --transition: 150ms ease;
   --sidebar-width: 250px;
-  --header-height: 60px;
+  --header-height: 70px;
 }
 
 /* Enroll form specific styles */
@@ -134,6 +134,7 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
   font-size: 1.1rem;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  color: var(--navy-900);
 }
 
 .header-user {
@@ -347,8 +348,73 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
 /* ── Login Page ────────────────────────────────── */
 
 body:has(.login-wrapper) {
-  background: var(--navy-900);
+  background: #0a0f1a;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+body:has(.login-wrapper)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+  pointer-events: none;
+}
+body:has(.login-wrapper)::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff41, transparent);
+  z-index: 0;
+  animation: cyberScan 4s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.cyber-glow {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 136, 248, 0.15), transparent 70%);
+  top: -150px;
+  right: -150px;
+  z-index: 0;
+  pointer-events: none;
+}
+.cyber-glow-2 {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 136, 247, 0.1), transparent 70%);
+  bottom: -120px;
+  left: -120px;
+  z-index: 0;
+  pointer-events: none;
+}
+.cyber-accent {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #0088f8, #0088f7, transparent);
+  z-index: 0;
+  opacity: 0.4;
+  pointer-events: none;
+}
+@keyframes cyberScan {
+  0%   { top: 0; opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
 }
 
 .login-wrapper {
@@ -358,6 +424,8 @@ body:has(.login-wrapper) {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .login-card {
