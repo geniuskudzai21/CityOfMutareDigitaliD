@@ -23,14 +23,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <select class="form-select" name="centre">
-                    <option value="">All Centres</option>
-                    {% for c in centres %}
-                    <option value="{{ c }}" {% if selected_centre == c %}selected{% endif %}>{{ c }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <!-- Centre filter removed per UI requirement -->
             <div class="col-lg-2 col-md-4 col-6">
                 <select class="form-select" name="status">
                     <option value="">All Status</option>
