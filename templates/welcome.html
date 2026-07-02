@@ -38,6 +38,34 @@ body::before {
     z-index: 1;
     text-align: center;
 }
+.welcome-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 50px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    position: relative;
+    left: 200px;
+    animation: cardIn 0.8s ease-out;
+}
+.welcome-card::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 10px;
+    border: 1.5px solid transparent;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3), transparent, rgba(255,255,255,0.1)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: borderGlow 3s ease-in-out infinite;
+}
 .welcome-btn {
     display: inline-flex;
     align-items: center;
@@ -51,21 +79,29 @@ body::before {
     background: linear-gradient(135deg, #0088f8, #0088f7);
     color: #fff;
     box-shadow: 0 4px 16px rgba(46,125,50,0.35);
-    position: relative;
-    left: 200px;
 }
 .welcome-btn:hover {
     transform: translateY(-2px);
     color: #fff;
 }
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes borderGlow {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+}
     </style>
 </head>
 <body>
     <div class="welcome-wrapper">
-        <a href="/login" class="welcome-btn">
-            <i class="bi bi-box-arrow-in-right"></i>
-            Sign In
-        </a>
+        <div class="welcome-card">
+            <a href="/login" class="welcome-btn">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Sign In
+            </a>
+        </div>
     </div>
 </body>
 </html>
