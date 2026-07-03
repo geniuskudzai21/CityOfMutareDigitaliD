@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h2 class="mb-0">Gadgets On-Site</h2>
+    <span class="text-muted small">{{ gadgets|length }} gadget{% if gadgets|length != 1 %}s{% endif %} currently checked in</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Serial Number</th>
+                        <th>Checked In</th>
+                        <th>Visitor</th>
+                        <th>Centre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in gadgets %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ g.gadget_type }}</span></td>
+                        <td>{{ g.gadget_name }}</td>
+                        <td>{{ g.serial_number or '—' }}</td>
+                        <td class="text-nowrap">{{ g.checked_in_time }}</td>
+                        <td>{{ g.full_name or 'Unknown' }}</td>
+                        <td>{{ g.site_name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="p-0">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+                                <h6>No gadgets on-site</h6>
+                                <p class="mb-0">All gadgets have been checked out.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block scripts %}{% endblock %}

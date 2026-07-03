@@ -41,6 +41,15 @@ def init_db(db_path):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS gadgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visit_id INTEGER NOT NULL REFERENCES visit_logs(id) ON DELETE CASCADE,
+            gadget_type TEXT NOT NULL CHECK(gadget_type IN ('Laptop', 'Phone', 'Tablet', 'Hard Drive', 'Camera', 'Other')),
+            gadget_name TEXT NOT NULL,
+            serial_number TEXT,
+            checked_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            checked_out_time TIMESTAMP
+        );
     """)
     conn.commit()
     conn.close()
@@ -72,6 +81,11 @@ def migrate_db(db_path):
         except sqlite3.OperationalError:
             pass
     conn.execute("UPDATE users SET active = 1 WHERE active IS NULL")
+    for col in ["checked_out_time"]:
+        try:
+            conn.execute(f"ALTER TABLE gadgets ADD COLUMN {col} TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass
     conn.close()
 
 
@@ -368,3 +382,62 @@ def delete_orphaned_logs(db_path):
     conn.commit()
     conn.close()
     return deleted
+
+
+def add_gadget(db_path, visit_id, gadget_type, gadget_name, serial_number=None):
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "INSERT INTO gadgets (visit_id, gadget_type, gadget_name, serial_number, checked_in_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+        (visit_id, gadget_type, gadget_name, serial_number),
+    )
+    conn.commit()
+    gadget_id = cursor.lastrowid
+    conn.close()
+    return gadget_id
+
+
+def get_unchecked_gadgets_for_employee(db_path, employee_id):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT g.*
+        FROM gadgets g
+        JOIN visit_logs vl ON g.visit_id = vl.id
+        WHERE vl.employee_id = ? AND g.checked_out_time IS NULL
+        ORDER BY g.checked_in_time
+    """, (employee_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_gadgets_for_visit(db_path, visit_id):
+    conn = get_connection(db_path)
+    rows = conn.execute(
+        "SELECT * FROM gadgets WHERE visit_id = ? ORDER BY checked_in_time",
+        (visit_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def checkout_gadget(db_path, gadget_id):
+    conn = get_connection(db_path)
+    conn.execute(
+        "UPDATE gadgets SET checked_out_time = CURRENT_TIMESTAMP WHERE id = ? AND checked_out_time IS NULL",
+        (gadget_id,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_all_checked_in_gadgets(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT g.*, vl.site_name, vl.employee_id, e.full_name
+        FROM gadgets g
+        JOIN visit_logs vl ON g.visit_id = vl.id
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE g.checked_out_time IS NULL
+        ORDER BY g.checked_in_time DESC
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]

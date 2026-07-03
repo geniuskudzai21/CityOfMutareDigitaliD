@@ -42,6 +42,15 @@
                         <div class="card border-0 bg-light">
                             <div class="card-body">
                                 <h5 class="mb-3">Log Visit</h5>
+                                <div id="checkoutSection" style="display: none;" class="mb-3">
+                                    <div class="alert alert-info py-2 px-3 mb-2">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Gadgets to Check Out
+                                    </div>
+                                    <div id="checkoutList"></div>
+                                    <button type="button" id="checkoutBtn" class="btn btn-warning btn-sm w-100 mb-3">
+                                        <i class="bi bi-check2-square me-1"></i>Check Out Selected
+                                    </button>
+                                </div>
                                 <div class="mb-3">
                                     <label for="purposeSelect" class="form-label">Purpose of Visit</label>
                                     <select id="purposeSelect" class="form-select">
@@ -57,6 +66,36 @@
                                 <div class="mb-3">
                                     <label for="notesInput" class="form-label">Notes (optional)</label>
                                     <textarea id="notesInput" class="form-control" rows="2"></textarea>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="gadgetToggle" role="switch">
+                                    <label class="form-check-label" for="gadgetToggle">Bring in a gadget?</label>
+                                </div>
+                                <div id="gadgetSection" style="display: none;">
+                                    <div id="gadgetEntries">
+                                        <div class="gadget-entry card border p-2 mb-2">
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <select class="form-select form-select-sm gadget-type" required>
+                                                        <option value="">Type</option>
+                                                        <option value="Laptop">Laptop</option>
+                                                        <option value="Phone">Phone</option>
+                                                        <option value="Tablet">Tablet</option>
+                                                        <option value="Hard Drive">Hard Drive</option>
+                                                        <option value="Camera">Camera</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control form-control-sm gadget-name" placeholder="Gadget name" required>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control form-control-sm gadget-serial" placeholder="Serial number (optional)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="addGadgetBtn" class="btn btn-outline-secondary btn-sm w-100 mb-3"><i class="bi bi-plus-circle me-1"></i>Add Another Gadget</button>
                                 </div>
                                 <button type="button" id="confirmBtn" class="btn btn-success w-100"><i class="bi bi-check-circle me-1"></i>Confirm & Log Visit</button>
                             </div>
@@ -117,6 +156,7 @@ scanBtn.addEventListener("click", async () => {
                 document.getElementById("resultName").textContent = data.full_name;
                 document.getElementById("resultRole").textContent = data.role;
                 document.getElementById("resultDept").textContent = data.department;
+                renderCheckoutGadgets(data.gadgets || []);
                 matchResult.style.display = "block";
             } else {
                 lastMatch = null;
@@ -133,6 +173,82 @@ scanBtn.addEventListener("click", async () => {
     }
 });
 
+document.getElementById("gadgetToggle").addEventListener("change", function () {
+    document.getElementById("gadgetSection").style.display = this.checked ? "block" : "none";
+});
+
+document.getElementById("addGadgetBtn").addEventListener("click", function () {
+    const entries = document.getElementById("gadgetEntries");
+    const template = entries.querySelector(".gadget-entry");
+    const clone = template.cloneNode(true);
+    clone.querySelector(".gadget-name").value = "";
+    clone.querySelector(".gadget-serial").value = "";
+    clone.querySelector(".gadget-type").value = "";
+    entries.appendChild(clone);
+});
+
+function renderCheckoutGadgets(gadgets) {
+    const section = document.getElementById("checkoutSection");
+    const list = document.getElementById("checkoutList");
+    list.innerHTML = "";
+    if (!gadgets.length) {
+        section.style.display = "none";
+        return;
+    }
+    gadgets.forEach(g => {
+        const div = document.createElement("div");
+        div.className = "form-check";
+        div.innerHTML = `<input class="form-check-input checkout-checkbox" type="checkbox" value="${g.id}" id="gadget-${g.id}">
+            <label class="form-check-label" for="gadget-${g.id}">
+                <strong>${g.gadget_type}</strong> — ${g.gadget_name}${g.serial_number ? " (" + g.serial_number + ")" : ""}
+                <br><small class="text-muted">Checked in: ${g.checked_in_time}</small>
+            </label>`;
+        list.appendChild(div);
+    });
+    section.style.display = "block";
+}
+
+document.getElementById("checkoutBtn").addEventListener("click", async function () {
+    const checkboxes = document.querySelectorAll(".checkout-checkbox:checked");
+    const gadget_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    if (!gadget_ids.length) return;
+    this.disabled = true;
+    try {
+        const res = await fetch("/staff/checkout-gadget", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ gadget_ids }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("statusMsg").innerHTML = '<div class="alert alert-success">Gadgets checked out successfully!</div>';
+            document.getElementById("checkoutSection").style.display = "none";
+        }
+    } catch {
+        document.getElementById("statusMsg").innerHTML = '<div class="alert alert-danger">Network error during checkout.</div>';
+    } finally {
+        this.disabled = false;
+    }
+});
+
+function collectGadgets() {
+    if (!document.getElementById("gadgetToggle").checked) return [];
+    const entries = document.querySelectorAll("#gadgetEntries .gadget-entry");
+    const gadgets = [];
+    entries.forEach(entry => {
+        const type = entry.querySelector(".gadget-type").value;
+        const name = entry.querySelector(".gadget-name").value.trim();
+        if (type && name) {
+            gadgets.push({
+                gadget_type: type,
+                gadget_name: name,
+                serial_number: entry.querySelector(".gadget-serial").value.trim() || null,
+            });
+        }
+    });
+    return gadgets;
+}
+
 confirmBtn.addEventListener("click", async () => {
     if (!lastMatch) return;
     confirmBtn.disabled = true;
@@ -144,6 +260,7 @@ confirmBtn.addEventListener("click", async () => {
                 employee_id: lastMatch.employee_id,
                 purpose: document.getElementById("purposeSelect").value || null,
                 notes: document.getElementById("notesInput").value || null,
+                gadgets: collectGadgets(),
             }),
         });
         const data = await res.json();
@@ -151,6 +268,8 @@ confirmBtn.addEventListener("click", async () => {
             document.getElementById("statusMsg").innerHTML = '<div class="alert alert-success">Visit logged successfully!</div>';
             document.getElementById("matchResult").style.display = "none";
             document.getElementById("resultPanel").style.display = "none";
+            document.getElementById("gadgetToggle").checked = false;
+            document.getElementById("gadgetSection").style.display = "none";
             lastMatch = null;
         }
     } catch {

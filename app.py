@@ -12,8 +12,13 @@ from werkzeug.security import check_password_hash
 
 from database import (
     add_employee,
+    add_gadget,
     add_log,
     add_user,
+    checkout_gadget,
+    get_all_checked_in_gadgets,
+    get_gadgets_for_visit,
+    get_unchecked_gadgets_for_employee,
     get_all_centres,
     get_distinct_departments,
     get_all_employees,
@@ -276,14 +281,16 @@ def admin_confirm_visit():
 
     idx = match_face(unknown_encoding, known)
     if idx is not None:
-        emp = employees[idx]
-        add_log(db_path, emp["id"], site_name, "verified", purpose, notes)
+        emp = emp_list[idx]
+        unchecked = get_unchecked_gadgets_for_employee(db_path, emp["id"])
         return jsonify({
             "verified": True,
+            "employee_id": emp["id"],
             "full_name": emp["full_name"],
             "role": emp["role"],
             "department": emp["department"],
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
+            "gadgets": unchecked,
         })
 
     filename = f"{uuid.uuid4().hex}.jpg"
@@ -339,6 +346,7 @@ def staff_verify():
     idx = match_face(unknown_encoding, list(enc_list))
     if idx is not None:
         emp = emp_list[idx]
+        unchecked = get_unchecked_gadgets_for_employee(db_path, emp["id"])
         return jsonify({
             "verified": True,
             "employee_id": emp["id"],
@@ -346,6 +354,7 @@ def staff_verify():
             "role": emp["role"],
             "department": emp["department"],
             "photo_url": f"/{emp['photo_path'].replace(os.sep, '/')}",
+            "gadgets": unchecked,
         })
 
     filename = f"{uuid.uuid4().hex}.jpg"
@@ -362,7 +371,7 @@ def staff_verify():
 @role_required("site_staff")
 def staff_confirm_visit():
     data = request.get_json()
-    add_log(
+    log_id = add_log(
         db_path,
         data["employee_id"],
         session.get("assigned_centre", ""),
@@ -370,7 +379,34 @@ def staff_confirm_visit():
         data.get("purpose"),
         data.get("notes"),
     )
+    for gadget in data.get("gadgets", []):
+        add_gadget(
+            db_path,
+            log_id,
+            gadget["gadget_type"],
+            gadget["gadget_name"],
+            gadget.get("serial_number"),
+        )
     return jsonify({"success": True})
+
+
+@app.route("/staff/checkout-gadget", methods=["POST"])
+@login_required
+@role_required("site_staff")
+def staff_checkout_gadget():
+    data = request.get_json()
+    gadget_ids = data.get("gadget_ids", [])
+    for gid in gadget_ids:
+        checkout_gadget(db_path, gid)
+    return jsonify({"success": True})
+
+
+@app.route("/admin/gadgets")
+@login_required
+@role_required("admin")
+def admin_gadgets():
+    gadgets = get_all_checked_in_gadgets(db_path)
+    return render_template("admin/gadgets.html", gadgets=gadgets)
 
 
 @app.route("/admin/logs")
@@ -383,6 +419,8 @@ def admin_logs():
     status = request.args.get("status")
     centre = request.args.get("centre")
     log_entries = get_filtered_logs(db_path, date, site, name, status, centre)
+    for log in log_entries:
+        log["gadgets"] = get_gadgets_for_visit(db_path, log["id"])
     sites = get_distinct_sites(db_path)
     centres = get_all_centres(db_path)
     return render_template("admin/logs.html", logs=log_entries, sites=sites, centres=centres,

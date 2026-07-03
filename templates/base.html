@@ -60,6 +60,9 @@
     <a href="/admin/logs" class="sidebar-link {% if request.path == '/admin/logs' %}active{% endif %}">
         <i class="bi bi-journal-text"></i> Logs
     </a>
+    <a href="/admin/gadgets" class="sidebar-link {% if request.path == '/admin/gadgets' %}active{% endif %}">
+        <i class="bi bi-box-seam"></i> Gadgets
+    </a>
     {% elif role == 'site_staff' %}
     <div class="sidebar-section-label">Staff</div>
     <a href="/staff/dashboard" class="sidebar-link {% if request.path == '/staff/dashboard' %}active{% endif %}">
