@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="action-icon bg-warning-subtle" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-telephone-fill text-warning" style="font-size:1.4rem"></i>
+                    </div>
+                    <div>
+                        <h2 class="card-title mb-0">Override Entry</h2>
+                        <div class="hint">Manually log a visitor who could not be verified by face recognition.</div>
+                    </div>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+
+                <form method="post" action="/admin/override-entry">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="override_name" class="form-label">Visitor Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="override_name" name="override_name" placeholder="Visitor's full name" required>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="override_phone_verified" class="form-label">Phone Number Called</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                <input type="text" class="form-control" id="override_phone_verified" name="override_phone_verified" placeholder="e.g. 0771 234 567">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="site_name" class="form-label">Site</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" class="form-control" id="site_name" name="site_name" placeholder="{{ session.get('assigned_centre', 'Your centre') }}">
+                            </div>
+                            <div class="form-text">Leave blank to use your assigned centre.</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="override_confirmed_by" class="form-label">Confirmed By</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-check"></i></span>
+                                <select class="form-select" id="override_confirmed_by" name="override_confirmed_by">
+                                    <option value="">— Myself ({{ session.username }}) —</option>
+                                    {% for staff in admin_staff %}
+                                    <option value="{{ staff.username }}">{{ staff.username }}{% if staff.role == 'admin' %} (Admin){% elif staff.assigned_centre %} ({{ staff.assigned_centre }}){% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label for="override_notes" class="form-label">Reason / Notes <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-chat-dots"></i></span>
+                                <textarea class="form-control" id="override_notes" name="override_notes" rows="3" placeholder="Why was this override necessary?" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-warning"><i class="bi bi-check-circle me-1"></i>Submit Override</button>
+                        <a href="/admin/dashboard" class="btn btn-secondary"><i class="bi bi-x me-1"></i>Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
