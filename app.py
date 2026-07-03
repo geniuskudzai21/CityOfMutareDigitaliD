@@ -145,6 +145,8 @@ def staff_dashboard():
 def staff_logs():
     centre = session.get("assigned_centre", "")
     all_logs = get_staff_recent_logs(db_path, centre)
+    for log in all_logs:
+        log["gadgets"] = get_gadgets_for_visit(db_path, log["id"])
     return render_template("staff/logs.html", centre=centre, logs=all_logs)
 
 
@@ -259,7 +261,7 @@ def admin_verify():
 @role_required("admin")
 def admin_confirm_visit():
     data = request.get_json()
-    add_log(
+    log_id = add_log(
         db_path,
         data["employee_id"],
         data.get("site_name", ""),
@@ -267,6 +269,14 @@ def admin_confirm_visit():
         data.get("purpose"),
         data.get("notes"),
     )
+    for gadget in data.get("gadgets", []):
+        add_gadget(
+            db_path,
+            log_id,
+            gadget["gadget_type"],
+            gadget["gadget_name"],
+            gadget.get("serial_number"),
+        )
     return jsonify({"success": True})
 
     employees = get_all_employees(db_path)
