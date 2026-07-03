@@ -86,6 +86,16 @@ def migrate_db(db_path):
             conn.execute(f"ALTER TABLE gadgets ADD COLUMN {col} TIMESTAMP")
         except sqlite3.OperationalError:
             pass
+    for col in ["is_override"]:
+        try:
+            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+    for col in ["override_name", "override_phone_verified", "override_confirmed_by", "override_notes"]:
+        try:
+            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
+        except sqlite3.OperationalError:
+            pass
     conn.close()
 
 
@@ -441,3 +451,22 @@ def get_all_checked_in_gadgets(db_path):
     """).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def get_admin_staff(db_path):
+    conn = get_connection(db_path)
+    rows = conn.execute("SELECT id, username, role, assigned_centre FROM users WHERE role = 'admin' OR assigned_centre = 'Civic Centre' ORDER BY role, username").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_override_entry(db_path, site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path=None):
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "INSERT INTO visit_logs (site_name, status, override_name, override_phone_verified, override_confirmed_by, override_notes, is_override, unrecognized_photo_path) VALUES (?, 'unknown', ?, ?, ?, ?, 1, ?)",
+        (site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path),
+    )
+    conn.commit()
+    log_id = cursor.lastrowid
+    conn.close()
+    return log_id

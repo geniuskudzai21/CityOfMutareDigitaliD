@@ -14,8 +14,10 @@ from database import (
     add_employee,
     add_gadget,
     add_log,
+    add_override_entry,
     add_user,
     checkout_gadget,
+    get_admin_staff,
     get_all_checked_in_gadgets,
     get_gadgets_for_visit,
     get_unchecked_gadgets_for_employee,
@@ -318,7 +320,8 @@ def admin_confirm_visit():
 @role_required("site_staff")
 def staff_verify():
     if request.method == "GET":
-        return render_template("staff/verify.html")
+        admin_staff = get_admin_staff(db_path)
+        return render_template("staff/verify.html", admin_staff=admin_staff)
     data = request.get_json()
     header, encoded = data["photo"].split(",", 1)
     image_data = base64.b64decode(encoded)
@@ -372,8 +375,8 @@ def staff_verify():
     os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
     with open(photo_path, "wb") as f:
         f.write(image_data)
-    add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
-    return jsonify({"verified": False, "error": "No match found"})
+    log_id = add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
+    return jsonify({"verified": False, "error": "No match found", "log_id": log_id})
 
 
 @app.route("/staff/confirm-visit", methods=["POST"])
@@ -411,6 +414,35 @@ def staff_checkout_gadget():
     return jsonify({"success": True})
 
 
+@app.route("/staff/override-entry", methods=["POST"])
+@login_required
+@role_required("site_staff")
+def staff_override_entry():
+    data = request.get_json()
+    header, encoded = data["photo"].split(",", 1)
+    image_data = base64.b64decode(encoded)
+    filename = f"{uuid.uuid4().hex}.jpg"
+    photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
+    os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
+    with open(photo_path, "wb") as f:
+        f.write(image_data)
+    confirmer_username = data["override_confirmed_by"]
+    valid_staff = get_admin_staff(db_path)
+    valid_usernames = {s["username"] for s in valid_staff}
+    if confirmer_username not in valid_usernames:
+        return jsonify({"success": False, "error": "Invalid confirmer selected."}), 400
+    add_override_entry(
+        db_path,
+        session.get("assigned_centre", ""),
+        data["override_name"],
+        data["override_phone_verified"],
+        confirmer_username,
+        data["override_notes"],
+        photo_path,
+    )
+    return jsonify({"success": True})
+
+
 @app.route("/admin/gadgets")
 @login_required
 @role_required("admin")
@@ -442,7 +474,8 @@ def admin_logs():
 @login_required
 @role_required("admin")
 def admin_unrecognized():
-    return redirect(url_for("admin_logs"))
+    logs = get_unrecognized_logs(db_path)
+    return render_template("admin/unrecognized.html", logs=logs)
 
 
 @app.route("/admin/unrecognized/<int:log_id>/delete", methods=["POST"], endpoint="admin_unrecognized_delete")

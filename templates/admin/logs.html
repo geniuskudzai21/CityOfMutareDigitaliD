@@ -37,7 +37,9 @@
         </form>
 
         {% set verified = logs | selectattr("status", "equalto", "verified") | list %}
-        {% set unknown = logs | selectattr("status", "equalto", "unknown") | list %}
+        {% set raw_unknown = logs | selectattr("status", "equalto", "unknown") | list %}
+        {% set overridden = raw_unknown | selectattr("is_override", "equalto", 1) | list %}
+        {% set unknown = raw_unknown | rejectattr("is_override", "equalto", 1) | list %}
 
         <h5 class="mb-3">
             <i class="bi bi-check-circle-fill text-success me-2"></i>Verified
@@ -132,6 +134,75 @@
         </div>
 
         <h5 class="mb-3">
+            <i class="bi bi-telephone-fill text-warning me-2"></i>Manual Overrides
+            <span class="text-muted small fw-normal">({{ overridden|length }})</span>
+        </h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-striped table-hover table-bordered mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:150px">Date / Time</th>
+                        <th>Visitor (stated)</th>
+                        <th>Site</th>
+                        <th>Status</th>
+                        <th style="width:100px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in overridden %}
+                    <tr>
+                        <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
+                        <td data-label="Visitor">{{ log.override_name or '—' }}</td>
+                        <td data-label="Site">{{ log.site_name }}</td>
+                        <td><span class="badge bg-warning text-dark">OVERRIDE</span></td>
+                        <td>
+                            <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
+                                <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
+                            </a>
+                            <button type="button" class="btn btn-link p-0 m-0 text-danger align-baseline" title="Delete" data-delete-url="{{ url_for('admin_log_delete', log_id=log.id) }}" onclick="confirmDelete(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr class="override-detail-row" id="override-row-{{ log.id }}" style="display:none">
+                        <td colspan="5" class="p-0">
+                            <div class="p-3 bg-light">
+                                <dl class="row mb-0 small">
+                                    <dt class="col-sm-3">Stated name</dt>
+                                    <dd class="col-sm-9">{{ log.override_name or '—' }}</dd>
+                                    <dt class="col-sm-3">Phone verified</dt>
+                                    <dd class="col-sm-9">{{ log.override_phone_verified or '—' }}</dd>
+                                    <dt class="col-sm-3">Confirmed by</dt>
+                                    <dd class="col-sm-9">{{ log.override_confirmed_by or '—' }}</dd>
+                                    <dt class="col-sm-3">Notes</dt>
+                                    <dd class="col-sm-9">{{ log.override_notes or '—' }}</dd>
+                                    <dt class="col-sm-3">Photo</dt>
+                                    <dd class="col-sm-9">
+                                        {% if log.unrecognized_photo_path %}
+                                        {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+                                        <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="scan" class="rounded" style="max-height:80px" data-bs-toggle="modal" data-bs-target="#overridePhotoModal{{ log.id }}">
+                                        {% else %}—{% endif %}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="p-0">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
+                                <h6>No override entries</h6>
+                                <p class="mb-0">All unrecognised scans were handled by security.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h5 class="mb-3">
             <i class="bi bi-question-circle-fill text-danger me-2"></i>Unrecognized
             <span class="text-muted small fw-normal">({{ unknown|length }})</span>
         </h5>
@@ -142,6 +213,7 @@
                         <th style="width:80px">Photo</th>
                         <th style="width:150px">Date / Time</th>
                         <th>Site</th>
+                        <th>Status</th>
                         <th style="width:100px">Actions</th>
                     </tr>
                 </thead>
@@ -158,6 +230,7 @@
                         </td>
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
+                        <td><span class="badge bg-danger">UNKNOWN</span></td>
                         <td>
                             <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
                                 <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
@@ -169,7 +242,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="p-0">
+                        <td colspan="5" class="p-0">
                             <div class="empty-state">
                                 <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
                                 <h6>No unrecognized visits</h6>
@@ -192,6 +265,24 @@
         <div class="modal-content border-0" style="background:transparent;box-shadow:none">
             <div class="modal-body p-0 text-center">
                 <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="img-fluid rounded shadow-lg" style="max-height:85vh;object-fit:contain">
+            </div>
+            <div class="text-center mt-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% for log in overridden %}
+{% if log.unrecognized_photo_path %}
+{% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
+<div class="modal fade" id="overridePhotoModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0" style="background:transparent;box-shadow:none">
+            <div class="modal-body p-0 text-center">
+                <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Override face" class="img-fluid rounded shadow-lg" style="max-height:85vh;object-fit:contain">
             </div>
             <div class="text-center mt-2">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>Close</button>
@@ -240,6 +331,16 @@ document.querySelectorAll('.gadget-toggle').forEach(function(link) {
             row.style.display = 'none';
         }
     });
+});
+document.querySelectorAll('.override-detail-row').forEach(function(row) {
+    var prev = row.previousElementSibling;
+    if (prev) {
+        prev.style.cursor = 'pointer';
+        prev.addEventListener('click', function(e) {
+            if (e.target.closest('td:last-child') || e.target.closest('a') || e.target.closest('button')) return;
+            row.style.display = row.style.display === 'none' ? '' : 'none';
+        });
+    }
 });
 </script>
 {% endblock %}
