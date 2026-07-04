@@ -14,7 +14,7 @@
   --amber-100: #FFF3E0;
   --blue-600: #1565C0;
   --blue-100: #E3F2FD;
-  --surface: #F0F2F5;
+  --surface: #E1E4EB;
   --white: #FFFFFF;
   --text-primary: #1A1A2E;
   --text-secondary: #5A6270;
@@ -104,12 +104,12 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
   right: 0;
   height: var(--header-height);
   background: var(--white);
-  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
   z-index: 1030;
+  box-shadow: 0 4px 16px rgba(0,136,248,0.25);
 }
 
 .header-brand {
@@ -258,7 +258,7 @@ a:not(.nav-link):not(.btn):not(.sidebar-link):hover {
 .sidebar-link.active {
   color: #fff;
   background: rgba(255,255,255,0.08);
-  border-left-color: var(--green-500);
+  border-left-color: #0088f8;
 }
 .sidebar-link i {
   font-size: 1.15rem;
@@ -490,6 +490,7 @@ body:has(.login-wrapper)::after {
 .login-card .form-control:focus {
   box-shadow: none;
   background: #fff;
+
 }
 .login-card .form-control::placeholder {
   color: #adb5bd;
@@ -916,8 +917,8 @@ body:has(.login-wrapper)::after {
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 .form-control:focus, .form-select:focus {
-  border-color: var(--green-500);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  border-color: #0088f8;
+  box-shadow: 0 0 0 3px rgba(0,136,248,0.12);
   outline: none;
 }
 .form-label {
@@ -1163,13 +1164,13 @@ video {
 }
 
 .chatbot-toggle {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--navy-900, #0F1A2E);
   color: #fff;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(15, 26, 46, 0.3);
   display: flex;
@@ -1218,15 +1219,15 @@ video {
 }
 
 .chatbot-header {
-  padding: 14px 16px;
-  background: var(--navy-900, #0F1A2E);
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #0088f8;
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 .chatbot-header i {
   font-size: 1.1rem;
