@@ -210,7 +210,6 @@
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width:80px">Photo</th>
                         <th style="width:150px">Date / Time</th>
                         <th>Site</th>
                         <th>Status</th>
@@ -220,14 +219,6 @@
                 <tbody>
                     {% for log in unknown %}
                     <tr>
-                        <td style="cursor:pointer" data-label="Photo">
-                            {% if log.unrecognized_photo_path %}
-                            {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
-                            <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="scan" class="rounded" style="width:48px;height:48px;object-fit:cover" data-bs-toggle="modal" data-bs-target="#unknownPhotoModal{{ log.id }}">
-                            {% else %}
-                            <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
                         <td><span class="badge bg-danger">UNKNOWN</span></td>
@@ -242,7 +233,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="p-0">
+                        <td colspan="4" class="p-0">
                             <div class="empty-state">
                                 <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
                                 <h6>No unrecognized visits</h6>

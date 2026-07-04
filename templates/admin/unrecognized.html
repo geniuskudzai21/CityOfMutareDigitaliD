@@ -8,7 +8,6 @@
             <thead class="table-dark">
                 <tr>
                     <th style="width:50px">Status</th>
-                    <th>Photo</th>
                     <th>Date / Time</th>
                     <th>Site</th>
                     <th>Visitor (stated)</th>
@@ -23,14 +22,6 @@
                         <span class="badge bg-warning text-dark" title="Entry Allowed via Call">Override</span>
                         {% else %}
                         <span class="badge bg-danger">Unknown</span>
-                        {% endif %}
-                    </td>
-                    <td style="cursor:pointer" data-label="Photo">
-                        {% if log.unrecognized_photo_path %}
-                        {% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
-                        <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="rounded" style="width:60px;height:60px;object-fit:cover;" data-bs-toggle="modal" data-bs-target="#photoModal{{ log.id }}">
-                        {% else %}
-                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
                     <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
@@ -55,7 +46,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="p-0">
+                    <td colspan="5" class="p-0">
                         <div class="empty-state">
                             <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
                             <h6>Queue is clear</h6>
@@ -69,22 +60,4 @@
     </div>
 </div>
 <a href="/admin/dashboard" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
-
-{% for log in logs %}
-{% if log.unrecognized_photo_path %}
-{% set _fname = log.unrecognized_photo_path.replace('\\','/').split('/')[-1] %}
-<div class="modal fade" id="photoModal{{ log.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content border-0" style="background:transparent;box-shadow:none">
-            <div class="modal-body p-0 text-center">
-                <img src="{{ url_for('static', filename='unrecognized_photos/' ~ _fname) }}" alt="Unknown face" class="img-fluid rounded shadow-lg" style="max-height:85vh;object-fit:contain">
-            </div>
-            <div class="text-center mt-2">
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x me-1"></i>Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-{% endfor %}
 {% endblock %}

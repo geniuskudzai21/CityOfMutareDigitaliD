@@ -41,7 +41,6 @@
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th>Photo</th>
                         <th>Name</th>
                         <th>Role</th>
                         <th>Department</th>
@@ -53,16 +52,6 @@
                 <tbody>
                     {% for emp in employees %}
                     <tr>
-                        <td class="align-middle" style="width:70px" data-label="Photo">
-                            {% if emp.photo_path %}
-                            {% set _fname = emp.photo_path.replace('\\','/').split('/')[-1] %}
-                            <img src="{{ url_for('static', filename='enrolled_photos/' ~ _fname) }}" alt="photo" class="rounded" style="width:48px;height:48px;object-fit:cover">
-                            {% else %}
-                            <div class="rounded bg-secondary-subtle d-flex align-items-center justify-content-center" style="width:48px;height:48px">
-                                <i class="bi bi-person text-secondary"></i>
-                            </div>
-                            {% endif %}
-                        </td>
                         <td class="fw-semibold" data-label="Name">{{ emp.full_name }}</td>
                         <td data-label="Role">{{ emp.role or '—' }}</td>
                         <td data-label="Department">{{ emp.department or '—' }}</td>
@@ -84,7 +73,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" class="p-0">
+                        <td colspan="6" class="p-0">
                             <div class="empty-state">
                                 <div class="empty-icon"><i class="bi bi-people"></i></div>
                                 <h6>No employees found</h6>
