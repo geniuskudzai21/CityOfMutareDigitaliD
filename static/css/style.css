@@ -888,7 +888,7 @@ body:has(.login-wrapper)::after {
   border-bottom-color: var(--border);
 }
 .table-striped > tbody > tr:nth-of-type(odd) > * {
-  background: #F7F8FA;
+  background: #fff;
 }
 .table-hover > tbody > tr:hover > * {
   background: var(--green-100);
@@ -1098,43 +1098,50 @@ video {
     width: 100%;
   }
   .table-responsive tr {
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem;
-    background: var(--white);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    box-shadow: 0 1px 4px rgba(15,26,46,0.06);
+    border-left: 3px solid var(--navy-600);
   }
   .table-responsive td,
   .table-responsive td.d-none,
   .table-responsive td.d-md-table-cell,
   .table-responsive td.d-lg-table-cell {
-    padding: 0.35rem 0;
+    padding: 0.5rem 0;
     border: none !important;
     text-align: left !important;
     display: flex !important;
     width: 100% !important;
+    align-items: center;
+    gap: 0.5rem;
   }
   .table-responsive td::before {
     content: attr(data-label);
-    font-weight: 600;
-    font-size: 0.75rem;
+    font-weight: 700;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     color: var(--text-muted);
-    min-width: 90px;
+    min-width: 95px;
     flex-shrink: 0;
   }
   .table-responsive td:first-child {
-    padding-top: 0;
+    padding-top: 0.25rem;
   }
   .table-responsive td:last-child {
-    padding-bottom: 0;
+    padding-bottom: 0.25rem;
   }
   .table-responsive .empty-state {
     display: block;
   }
   .table-responsive .empty-state td {
     padding: 0 !important;
+  }
+  .table-responsive .badge {
+    font-size: 0.7rem;
+    padding: 0.3em 0.6em;
   }
 }
 

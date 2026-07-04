@@ -6,9 +6,6 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
                     <div>
                         <h2 class="card-title mb-0">Visit Details</h2>
                         <div class="hint">View log entry information.</div>
@@ -44,15 +41,15 @@
                             <tbody>
                                 <tr>
                                     <th class="bg-light" style="width:140px">Date / Time</th>
-                                    <td data-label="Date / Time">{{ log.timestamp }}</td>
+                                    <td>{{ log.timestamp }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Site</th>
-                                    <td data-label="Site">{{ log.site_name }}</td>
+                                    <td>{{ log.site_name }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Status</th>
-                                    <td data-label="Status">
+                                    <td>
                                         {% if log.status == 'verified' %}
                                         <span class="badge bg-success">VERIFIED</span>
                                         {% else %}
@@ -63,34 +60,34 @@
                                 {% if log.full_name %}
                                 <tr>
                                     <th class="bg-light">Name</th>
-                                    <td class="fw-semibold" data-label="Name">{{ log.full_name }}</td>
+                                    <td class="fw-semibold">{{ log.full_name }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.role %}
                                 <tr>
                                     <th class="bg-light">Role</th>
-                                    <td data-label="Role">{{ log.role }}</td>
+                                    <td>{{ log.role }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.department %}
                                 <tr>
                                     <th class="bg-light">Department</th>
-                                    <td data-label="Department">{{ log.department }}</td>
+                                    <td>{{ log.department }}</td>
                                 </tr>
                                 {% endif %}
                                 {% if log.emp_centre %}
                                 <tr>
                                     <th class="bg-light">Employee Centre</th>
-                                    <td data-label="Employee Centre">{{ log.emp_centre }}</td>
+                                    <td>{{ log.emp_centre }}</td>
                                 </tr>
                                 {% endif %}
                                 <tr>
                                     <th class="bg-light">Purpose</th>
-                                    <td data-label="Purpose">{{ log.purpose or '—' }}</td>
+                                    <td>{{ log.purpose or '—' }}</td>
                                 </tr>
                                 <tr>
                                     <th class="bg-light">Notes</th>
-                                    <td data-label="Notes">{{ log.notes or '—' }}</td>
+                                    <td>{{ log.notes or '—' }}</td>
                                 </tr>
                             </tbody>
                         </table>

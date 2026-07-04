@@ -8,12 +8,22 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form class="row g-2 mb-4" method="get" action="/admin/logs">
+        <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <i class="bi bi-funnel text-muted"></i>
+            <span class="text-muted small fw-semibold">Filters</span>
+        </div>
+        <form class="row g-2 mb-3" method="get" action="/admin/logs">
             <div class="col-lg-2 col-md-4 col-6">
-                <input type="date" class="form-control" name="date" value="{{ selected_date or '' }}">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="bi bi-calendar3"></i></span>
+                    <input type="date" class="form-control" name="date" value="{{ selected_date or '' }}">
+                </div>
             </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <input type="text" class="form-control" name="name" placeholder="Search name..." value="{{ selected_name or '' }}">
+            <div class="col-lg-3 col-md-4 col-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="name" placeholder="Name" value="{{ selected_name or '' }}">
+                </div>
             </div>
             <div class="col-lg-2 col-md-4 col-6">
                 <select class="form-select" name="site">
@@ -30,9 +40,9 @@
                     <option value="unknown" {% if selected_status == 'unknown' %}selected{% endif %}>Unknown</option>
                 </select>
             </div>
-            <div class="col-lg-2 col-md-4 col-6 d-flex gap-1">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
-                <a href="/admin/logs" class="btn btn-secondary flex-grow-1"><i class="bi bi-x-circle"></i></a>
+            <div class="col-lg-3 col-md-4 col-12 d-flex gap-1 align-items-end">
+                <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Search</button>
+                <a href="/admin/logs" class="btn btn-outline-secondary flex-fill"><i class="bi bi-x-lg me-1"></i>Clear</a>
             </div>
         </form>
 
@@ -66,7 +76,7 @@
                         <td class="d-none d-md-table-cell" style="width:110px" data-label="Role">{{ log.role or '—' }}</td>
                         <td class="d-none d-lg-table-cell" style="width:130px" data-label="Dept">{{ log.department or '—' }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Gadgets">
                             {% set gc = log.gadgets|length %}
                             <a class="gadget-toggle text-decoration-none" href="#" data-log-id="{{ log.id }}" title="{{ gc }} gadget{% if gc != 1 %}s{% endif %}">
                                 {% if gc > 0 %}
@@ -77,7 +87,7 @@
                                 {% endif %}
                             </a>
                         </td>
-                        <td>
+                        <td data-label="Actions">
                             <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
                                 <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
                             </a>
@@ -154,8 +164,8 @@
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
                         <td data-label="Visitor">{{ log.override_name or '—' }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
-                        <td><span class="badge bg-warning text-dark">OVERRIDE</span></td>
-                        <td>
+                        <td data-label="Status"><span class="badge bg-warning text-dark">OVERRIDE</span></td>
+                        <td data-label="Actions">
                             <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
                                 <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
                             </a>
@@ -221,8 +231,8 @@
                     <tr>
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
-                        <td><span class="badge bg-danger">UNKNOWN</span></td>
-                        <td>
+                        <td data-label="Status"><span class="badge bg-danger">UNKNOWN</span></td>
+                        <td data-label="Actions">
                             <a href="{{ url_for('admin_log_view', log_id=log.id) }}" class="text-decoration-none me-2" title="View">
                                 <i class="bi bi-eye text-info" style="font-size:1.15rem"></i>
                             </a>
