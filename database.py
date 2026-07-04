@@ -41,6 +41,10 @@ def init_db(db_path):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS departments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS gadgets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             visit_id INTEGER NOT NULL REFERENCES visit_logs(id) ON DELETE CASCADE,
@@ -56,6 +60,7 @@ def init_db(db_path):
     migrate_db(db_path)
     init_users(db_path)
     init_centres(db_path)
+    init_departments(db_path)
 
 
 def migrate_db(db_path):
@@ -123,6 +128,19 @@ def init_centres(db_path):
         centres = ["Civic Centre", "Stores", "Housing", "Chikanga", "Hobhouse"]
         for c in centres:
             conn.execute("INSERT INTO centres (name) VALUES (?)", (c,))
+        conn.commit()
+    conn.close()
+
+
+def init_departments(db_path):
+    conn = get_connection(db_path)
+    existing = conn.execute("SELECT COUNT(*) FROM departments").fetchone()[0]
+    if existing == 0:
+        departments = ["ICT", "HR", "TRAFFIC", "FINANCE", "DEBTORS", "PAYMENTS", "SALARIES",
+                       "SECURITY", "SPATIAL PLANNING", "GIS", "ENGINEERING", "HEALTH",
+                       "HOUSING", "PROCUREMENT", "ACCOUNTANT EXPENDITURE", "AUDIT", "CASHIER", "ASSETS"]
+        for d in departments:
+            conn.execute("INSERT INTO departments (name) VALUES (?)", (d,))
         conn.commit()
     conn.close()
 
@@ -271,9 +289,9 @@ def get_all_centres(db_path):
 
 def get_distinct_departments(db_path):
     conn = get_connection(db_path)
-    rows = conn.execute("SELECT DISTINCT department FROM employees WHERE department IS NOT NULL AND department != '' ORDER BY department").fetchall()
+    rows = conn.execute("SELECT name FROM departments ORDER BY name").fetchall()
     conn.close()
-    return [r["department"] for r in rows if r["department"]]
+    return [r["name"] for r in rows]
 
 
 def get_filtered_employees(db_path, name=None, department=None, role=None, centre=None):
@@ -328,12 +346,11 @@ def get_dashboard_stats(db_path):
     total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
     today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = DATE('now')").fetchone()[0]
     unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
-    recent_unknown = conn.execute("""
-        SELECT vl.*, e.full_name
+    recent_logs = conn.execute("""
+        SELECT vl.*, e.full_name, e.role, e.department
         FROM visit_logs vl
         LEFT JOIN employees e ON vl.employee_id = e.id
-        WHERE vl.status = 'unknown'
-        ORDER BY vl.timestamp DESC LIMIT 10
+        ORDER BY vl.timestamp DESC LIMIT 5
     """).fetchall()
     conn.close()
     return {
@@ -341,7 +358,7 @@ def get_dashboard_stats(db_path):
         "total_logs": total_logs,
         "today_visits": today_visits,
         "unknown_count": unknown_count,
-        "recent_unknown": [dict(r) for r in recent_unknown],
+        "recent_logs": [dict(r) for r in recent_logs],
     }
 
 

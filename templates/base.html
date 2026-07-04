@@ -124,7 +124,7 @@
 </script>
 {% block scripts %}{% endblock %}
 
-{% if logged_in %}
+{% if logged_in and role == 'admin' %}
 <div class="chatbot-container" id="chatbot-container">
   <button class="chatbot-toggle" id="chatbot-toggle" aria-label="Toggle AI Assistant">
     <i class="bi bi-robot"></i>

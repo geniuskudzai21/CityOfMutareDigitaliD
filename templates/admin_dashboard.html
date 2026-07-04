@@ -124,10 +124,9 @@
     </div>
 </div>
 
-{% if stats.recent_unknown %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Recent Unrecognized Scans</h4>
-    <a href="/admin/logs?status=unknown" class="btn btn-outline-danger btn-sm"><i class="bi bi-arrow-right me-1"></i>View All</a>
+    <h4 class="mb-0">Recent Activity</h4>
+    <a href="/admin/logs" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-right me-1"></i>View All</a>
 </div>
 <div class="card shadow-sm">
     <div class="table-responsive">
@@ -135,29 +134,40 @@
             <thead class="table-dark">
                 <tr>
                     <th>Date / Time</th>
+                    <th>Name</th>
                     <th>Site</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                {% for log in stats.recent_unknown[:5] %}
+                {% for log in stats.recent_logs %}
                 <tr>
                     <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
+                    <td data-label="Name">{{ log.full_name or log.override_name or '—' }}</td>
                     <td data-label="Site">{{ log.site_name }}</td>
-                    <td data-label="Status"><span class="badge bg-danger">UNKNOWN</span></td>
+                    <td data-label="Status">
+                        {% if log.is_override %}
+                        <span class="badge bg-warning text-dark">OVERRIDE</span>
+                        {% elif log.status == 'verified' %}
+                        <span class="badge bg-success">VERIFIED</span>
+                        {% else %}
+                        <span class="badge bg-danger">UNKNOWN</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="p-0">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-clock-history"></i></div>
+                            <h6>No recent activity</h6>
+                            <p class="mb-0">Visit logs will appear here once visitors are scanned.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-{% else %}
-<div class="card shadow-sm">
-    <div class="empty-state">
-        <div class="empty-icon"><i class="bi bi-shield-check"></i></div>
-        <h6>No unrecognized scans</h6>
-        <p class="mb-0">All recent scans have been successfully matched.</p>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

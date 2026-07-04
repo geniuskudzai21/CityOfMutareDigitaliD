@@ -20,16 +20,18 @@
                     {% for log in logs %}
                     <tr>
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
-                        <td data-label="Name">{{ log.full_name or '—' }}</td>
-                        <td class="d-none d-sm-table-cell" data-label="Role">{{ log.role or '—' }}</td>
+                        <td data-label="Name">{{ log.full_name or log.override_name or '—' }}</td>
+                        <td class="d-none d-sm-table-cell" data-label="Role">{{ log.role or (log.is_override and 'Override' or '—') }}</td>
                         <td data-label="Status">
-                            {% if log.status == 'verified' %}
+                            {% if log.is_override %}
+                            <span class="badge bg-warning text-dark">OVERRIDE</span>
+                            {% elif log.status == 'verified' %}
                             <span class="badge bg-success">VERIFIED</span>
                             {% else %}
                             <span class="badge bg-danger">UNKNOWN</span>
                             {% endif %}
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" data-label="Gadgets">
                             {% set gc = log.gadgets|length %}
                             <a class="gadget-toggle text-decoration-none" href="#" data-log-id="{{ log.id }}" title="{{ gc }} gadget{% if gc != 1 %}s{% endif %}">
                                 {% if gc > 0 %}
