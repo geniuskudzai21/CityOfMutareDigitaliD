@@ -21,7 +21,8 @@ USER ROLES:
 - Admin: Full access — enroll employees, verify visitors, manage logs/centres/staff, view gadgets
 - Site Staff: Per-centre access — verify visitors, view centre logs, process gadget check-out, overrides
 
-CENTRES: Civic Centre, Stores, Housing, Chikanga, Hobhouse
+CENTRES: Civic Centre, Chikanga, Hobhouse, Moffat, Stores, Odzani, FernValley
+DEPARTMENTS: ACCOUNTANT EXPENDITURE, ASSETS, AUDIT, CASHIER, DEBTORS, ENGINEERING, FINANCE, GIS, HEALTH, HOUSING, HR, ICT, PAYMENTS, PROCUREMENT, SALARIES, SECURITY, SPATIAL PLANNING, TRAFFIC
 
 DATABASE TABLES:
 1. employees — enrolled individuals (id, full_name, role, department, contact, centre, photo_path, face_encoding)

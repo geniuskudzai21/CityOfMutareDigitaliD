@@ -60,7 +60,7 @@
 .photo-preview img{ display:block; width:100%; height:100%; object-fit:cover; }
 .enroll-form .card { border-radius: 14px; }
 .input-group-text .bi { font-size: 1.05rem; }
-.form-control:focus, .form-select:focus { box-shadow: 0 6px 18px rgba(20,120,200,0.06); border-color: var(--blue-600); }
+.form-control:focus, .form-select:focus { box-shadow: 0 6px 18px rgba(20,120,200,0.06); border-color: #0088f8; }
 .hint { font-size: 0.85rem; color: var(--text-muted); }
 
 
@@ -1322,7 +1322,7 @@ video {
   background: var(--surface, #F0F2F5);
 }
 .chatbot-input:focus {
-  border-color: var(--green-500, #43A047);
+  border-color: #0088f8;
   background: var(--white, #fff);
 }
 .chatbot-send {
@@ -1330,7 +1330,7 @@ video {
   height: 38px;
   border-radius: 50%;
   border: none;
-  background: var(--navy-700, #2C3E6B);
+  background: #0088f8;
   color: #fff;
   font-size: 0.9rem;
   cursor: pointer;
@@ -1341,7 +1341,7 @@ video {
   flex-shrink: 0;
 }
 .chatbot-send:hover {
-  background: var(--navy-800, #1B2A4A);
+  background: #0070d0;
 }
 
 @media (max-width: 480px) {

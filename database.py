@@ -125,7 +125,7 @@ def init_centres(db_path):
     conn = get_connection(db_path)
     existing = conn.execute("SELECT COUNT(*) FROM centres").fetchone()[0]
     if existing == 0:
-        centres = ["Civic Centre", "Stores", "Housing", "Chikanga", "Hobhouse"]
+        centres = ["Civic Centre", "Stores", "Moffat", "Chikanga", "Hobhouse", "Odzani", "FernValley"]
         for c in centres:
             conn.execute("INSERT INTO centres (name) VALUES (?)", (c,))
         conn.commit()
