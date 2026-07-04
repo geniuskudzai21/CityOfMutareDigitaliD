@@ -123,5 +123,28 @@
 })();
 </script>
 {% block scripts %}{% endblock %}
+
+{% if logged_in %}
+<div class="chatbot-container" id="chatbot-container">
+  <button class="chatbot-toggle" id="chatbot-toggle" aria-label="Toggle AI Assistant">
+    <i class="bi bi-robot"></i>
+    <i class="bi bi-x-lg"></i>
+  </button>
+  <div class="chatbot-body" id="chatbot-body">
+    <div class="chatbot-header">
+      <i class="bi bi-shield-check"></i>
+      <span>AI Security Assistant</span>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages"></div>
+    <div class="chatbot-footer">
+      <input type="text" class="chatbot-input" id="chatbot-input" placeholder="Ask about the system..." autocomplete="off">
+      <button class="chatbot-send" id="chatbot-send" aria-label="Send">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

@@ -5,6 +5,9 @@ import pickle
 import tempfile
 import uuid
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
@@ -44,6 +47,7 @@ from database import (
     delete_orphaned_logs,
 )
 from face_utils import encode_face, match_face
+from chatbot import get_chatbot_response
 
 app = Flask(__name__)
 app.secret_key = os.urandom(32).hex()
@@ -626,6 +630,15 @@ def admin_employee_create_login(emp_id):
                                login_error=error, login_emp_id=emp_id)
     add_user(db_path, username, password, "site_staff", centre)
     return redirect(url_for("admin_employees"))
+
+
+@app.route("/api/chat", methods=["POST"])
+@login_required
+def api_chat():
+    data = request.get_json()
+    messages = data.get("messages", [])
+    reply = get_chatbot_response(messages, db_path)
+    return jsonify({"reply": reply})
 
 
 if __name__ == "__main__":
