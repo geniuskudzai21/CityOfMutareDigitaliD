@@ -431,9 +431,12 @@ body:has(.login-wrapper)::after {
 .login-card {
   width: 100%;
   max-width: 340px;
-  background: #fff;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  border: 1.5px solid #0088f8;
+  box-shadow: 0 0 0 1px #0088f7, 0 4px 24px rgba(0,0,0,0.06);
   padding: 1.5rem 1.5rem;
 }
 
@@ -494,7 +497,8 @@ body:has(.login-wrapper)::after {
 }
 
 .login-btn {
-  padding: 0.6rem 1rem;
+  margin-top: 20px;
+  padding: 0.8rem 1rem;
   font-size: 0.85rem;
   font-weight: 600;
   border-radius: 10px;
@@ -507,6 +511,7 @@ body:has(.login-wrapper)::after {
   cursor: pointer;
   background: var(--navy-900);
   color: white;
+  border: 1.5px solid #0088f8;
   position: relative;
   overflow: hidden;
   animation: loginBtnPulse 2.5s ease-in-out infinite;
