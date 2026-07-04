@@ -121,6 +121,8 @@ TOOLS = [
 
 
 def _call_tool(name, args, db_path):
+    if not isinstance(args, dict):
+        args = {}
     if name == "get_dashboard_stats":
         return get_dashboard_stats(db_path)
     elif name == "search_employees":
@@ -150,7 +152,7 @@ def _call_tool(name, args, db_path):
 
 
 def get_chatbot_response(messages, db_path):
-    api_key = os.environ.get("GROK_API_KEY") or os.environ.get("AI_API_KEY")
+    api_key = os.environ.get("AI_API_KEY") or os.environ.get("GROQ_API_KEY") or os.environ.get("GROK_API_KEY")
     api_base = os.environ.get("AI_API_BASE", "https://openrouter.ai/api/v1")
     model = os.environ.get("AI_MODEL", "qwen/qwen-2.5-72b-instruct")
 
@@ -197,7 +199,7 @@ def get_chatbot_response(messages, db_path):
                 temperature=0.3,
                 max_tokens=1024,
             )
-            return final.choices[0].message.content
+            return final.choices[0].message.content or "Done."
 
         return msg.content
 

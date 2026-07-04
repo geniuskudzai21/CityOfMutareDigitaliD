@@ -7,6 +7,7 @@
   var body = document.getElementById("chatbot-body");
   var input = document.getElementById("chatbot-input");
   var sendBtn = document.getElementById("chatbot-send");
+  var clearBtn = document.getElementById("chatbot-clear");
   var messagesEl = document.getElementById("chatbot-messages");
 
   function scrollBottom() {
@@ -72,8 +73,15 @@
       });
   }
 
+  function clearChat() {
+    messages = [];
+    messagesEl.innerHTML = "";
+    addMessage("assistant", "Hello! I'm the AI Security Assistant. Ask me anything about the MCC Digital ID System — stats, employees, visits, centres, or how things work.");
+  }
+
   toggleBtn.addEventListener("click", toggle);
   sendBtn.addEventListener("click", send);
+  clearBtn.addEventListener("click", clearChat);
   input.addEventListener("keydown", function (e) {
     if (e.key === "Enter") send();
   });
