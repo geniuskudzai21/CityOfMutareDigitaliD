@@ -151,46 +151,64 @@ def _call_tool(name, args, db_path):
 
 def get_chatbot_response(messages, db_path):
     api_key = os.environ.get("GROK_API_KEY") or os.environ.get("AI_API_KEY")
-    api_base = os.environ.get("AI_API_BASE", "https://api.x.ai/v1")
-    model = os.environ.get("AI_MODEL", "grok-2-latest")
+    api_base = os.environ.get("AI_API_BASE", "https://openrouter.ai/api/v1")
+    model = os.environ.get("AI_MODEL", "qwen/qwen-2.5-72b-instruct")
 
     if not api_key:
-        return "The AI assistant is not configured. Ask an admin to set the GROK_API_KEY environment variable."
+        return "The AI assistant is not configured. Ask an admin to set the AI_API_KEY in the .env file."
 
-    client = OpenAI(api_key=api_key, base_url=api_base)
+    try:
+        client = OpenAI(
+            api_key=api_key,
+            base_url=api_base,
+            default_headers={
+                "HTTP-Referer": "http://localhost:5000",
+                "X-Title": "MCC Digital ID System",
+            },
+        )
 
-    chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    chat_messages.extend(messages)
+        chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        chat_messages.extend(messages)
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=chat_messages,
-        tools=TOOLS,
-        tool_choice="auto",
-        temperature=0.3,
-        max_tokens=1024,
-    )
-
-    message = response.choices[0].message
-
-    if message.tool_calls:
-        chat_messages.append(message)
-        for tc in message.tool_calls:
-            func_name = tc.function.name
-            func_args = json.loads(tc.function.arguments)
-            result = _call_tool(func_name, func_args, db_path)
-            chat_messages.append({
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "content": json.dumps(result, default=str)
-            })
-
-        final = client.chat.completions.create(
+        resp = client.chat.completions.create(
             model=model,
             messages=chat_messages,
+            tools=TOOLS,
+            tool_choice="auto",
             temperature=0.3,
             max_tokens=1024,
         )
-        return final.choices[0].message.content
 
-    return message.content
+        msg = resp.choices[0].message
+
+        if msg.tool_calls:
+            chat_messages.append(msg)
+            for tc in msg.tool_calls:
+                result = _call_tool(tc.function.name, json.loads(tc.function.arguments), db_path)
+                chat_messages.append({
+                    "role": "tool",
+                    "tool_call_id": tc.id,
+                    "content": json.dumps(result, default=str)
+                })
+
+            final = client.chat.completions.create(
+                model=model,
+                messages=chat_messages,
+                temperature=0.3,
+                max_tokens=1024,
+            )
+            return final.choices[0].message.content
+
+        return msg.content
+
+    except Exception as e:
+        err_str = str(e)
+        if "401" in err_str or "unauthorized" in err_str.lower() or "authentication" in err_str.lower():
+            return "Invalid API key. If using OpenRouter, get a key from https://openrouter.ai/keys and set AI_API_KEY in .env."
+        if "402" in err_str:
+            return "Your API provider requires payment. Add billing or use a free model."
+        if "429" in err_str:
+            return "Rate limited. Wait a moment and try again."
+        if "model" in err_str.lower() and "not found" in err_str.lower():
+            return f"Model '{model}' not found. Check AI_MODEL in .env or try a different model."
+        return f"AI error: {err_str[:200]}"
