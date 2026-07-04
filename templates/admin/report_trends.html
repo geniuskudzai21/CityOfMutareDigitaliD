@@ -2,7 +2,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">Visit Trends</h2>
-    <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    <div class="d-flex gap-2">
+        <a href="/admin/reports/trends/export" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>CSV</a>
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-filetype-pdf me-1"></i>PDF</button>
+        <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    </div>
 </div>
 
 <div class="card shadow-sm mb-4">
@@ -11,28 +15,67 @@
     </div>
 </div>
 
+{% set total_visits = trends | sum(attribute='visits') %}
+{% set dates = trends | map(attribute='date') | unique | list %}
+{% set avg_daily = (total_visits / dates|length) | round(1) if dates else 0 %}
+{% set busiest = trends | sort(attribute='visits', reverse=True) | first %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card stat-card text-bg-primary">
+            <div class="card-body">
+                <div class="stat-value">{{ total_visits }}</div>
+                <div class="stat-label">Total Visits</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card stat-card text-bg-info" style="background:linear-gradient(135deg,#0088f8,#1E88E5)!important;border-color:transparent">
+            <div class="card-body">
+                <div class="stat-value">{{ avg_daily }}</div>
+                <div class="stat-label">Avg / Day</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card stat-card text-bg-success">
+            <div class="card-body">
+                <div class="stat-value">{{ dates|length }}</div>
+                <div class="stat-label">Days Tracked</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card stat-card text-bg-warning">
+            <div class="card-body">
+                <div class="stat-value">{{ busiest.site_name if busiest else '—' }}</div>
+                <div class="stat-label">Busiest Site</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-striped table-hover table-bordered mb-0">
             <thead class="table-dark">
                 <tr>
-                    <th>Date</th>
+                    <th style="width:100px">Date</th>
                     {% for c in centres %}
-                    <th>{{ c }}</th>
+                    <th class="text-center" style="width:60px">{{ c }}</th>
                     {% endfor %}
-                    <th>Total</th>
+                    <th class="text-center" style="width:60px">Total</th>
                 </tr>
             </thead>
             <tbody>
-                {% set dates = trends | map(attribute='date') | unique | list %}
                 {% for date in dates %}
                 <tr>
-                    <td class="text-nowrap">{{ date }}</td>
+                    <td class="text-nowrap" data-label="Date">{{ date }}</td>
                     {% for c in centres %}
                     {% set row = trends | selectattr('date', 'equalto', date) | selectattr('site_name', 'equalto', c) | list %}
-                    <td>{{ row[0]['visits'] if row else 0 }}</td>
+                    <td class="text-center" data-label="{{ c }}">{{ row[0]['visits'] if row else 0 }}</td>
                     {% endfor %}
-                    <td class="fw-semibold">{{ trends | selectattr('date', 'equalto', date) | sum(attribute='visits') }}</td>
+                    <td class="text-center fw-semibold" data-label="Total">{{ trends | selectattr('date', 'equalto', date) | sum(attribute='visits') }}</td>
                 </tr>
                 {% else %}
                 <tr>

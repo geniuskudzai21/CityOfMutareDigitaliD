@@ -490,6 +490,49 @@ def admin_report_trends():
     return render_template("admin/report_trends.html", trends=trends, centres=centre_names, centre_names=centre_names)
 
 
+@app.route("/admin/reports/trends/export")
+@login_required
+@role_required("admin")
+def admin_report_trends_export():
+    trends = get_visit_trends(db_path)
+    centre_names = get_all_centres(db_path)
+    output = io.StringIO()
+    w = csv.writer(output)
+    header = ["Date"] + centre_names + ["Total"]
+    w.writerow(header)
+    dates = sorted(set(r["date"] for r in trends))
+    for date in dates:
+        row = [date]
+        total = 0
+        for c in centre_names:
+            val = sum(r["visits"] for r in trends if r["date"] == date and r["site_name"] == c)
+            row.append(val)
+            total += val
+        row.append(total)
+        w.writerow(row)
+    resp = app.make_response(output.getvalue())
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=visit_trends_export.csv"
+    return resp
+
+
+@app.route("/admin/reports/attendance/export")
+@login_required
+@role_required("admin")
+def admin_report_attendance_export():
+    attendance = get_employee_attendance(db_path)
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(["Name", "Department", "Centre", "Role", "Visits", "Last Visit"])
+    for r in attendance:
+        w.writerow([r["full_name"], r["department"] or "", r["centre"] or "", r["role"] or "",
+                    r["visit_count"], r["last_visit"] or ""])
+    resp = app.make_response(output.getvalue())
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=employee_attendance_export.csv"
+    return resp
+
+
 @app.route("/admin/reports/attendance")
 @login_required
 @role_required("admin")
