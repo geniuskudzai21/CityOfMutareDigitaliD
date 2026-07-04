@@ -1361,3 +1361,9 @@ video {
     right: 12px;
   }
 }
+
+@media (max-width: 768px) {
+  #trendsChart {
+    height: 310px !important;
+  }
+}

@@ -5,7 +5,7 @@ from openai import OpenAI
 from database import (
     get_dashboard_stats, get_filtered_employees, get_filtered_logs,
     get_all_centres, get_all_checked_in_gadgets, get_employee_by_id,
-    get_today_centre_visits
+    get_today_centre_visits, get_visit_trends, get_employee_attendance,
 )
 
 SYSTEM_PROMPT = """You are the AI Security Assistant for the MCC Digital ID System — a face recognition-based access control and visitor management system for the City of Mutare municipal council (Zimbabwe).
@@ -117,6 +117,22 @@ TOOLS = [
                 "required": ["employee_id"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_visit_trends_data",
+            "description": "Get visit trends for the last 14 days, grouped by date and site.",
+            "parameters": {"type": "object", "properties": {}}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_employee_attendance_data",
+            "description": "Get employee attendance report: visit counts and last visit date for all employees.",
+            "parameters": {"type": "object", "properties": {}}
+        }
     }
 ]
 
@@ -149,6 +165,10 @@ def _call_tool(name, args, db_path):
         return {"centre": args["centre"], "today_visits": get_today_centre_visits(db_path, args["centre"])}
     elif name == "get_employee_details":
         return get_employee_by_id(db_path, args["employee_id"])
+    elif name == "get_visit_trends_data":
+        return get_visit_trends(db_path)
+    elif name == "get_employee_attendance_data":
+        return get_employee_attendance(db_path)
     return {"error": f"Unknown tool: {name}"}
 
 

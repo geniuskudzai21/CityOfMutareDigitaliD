@@ -52,7 +52,7 @@
         <i class="bi bi-person-plus"></i> Enroll
     </a>
     <a href="/admin/employees" class="sidebar-link {% if request.path == '/admin/employees' %}active{% endif %}">
-        <i class="bi bi-people-fill"></i> Users
+        <i class="bi bi-people-fill"></i> Employees
     </a>
     <a href="/admin/logs" class="sidebar-link {% if request.path == '/admin/logs' %}active{% endif %}">
         <i class="bi bi-journal-text"></i> Logs
@@ -62,7 +62,7 @@
     </a>
     <div class="sidebar-section-label" style="margin-top:0.5rem">Reports</div>
     <a href="/admin/reports/attendance" class="sidebar-link {% if request.path == '/admin/reports/attendance' %}active{% endif %}">
-        <i class="bi bi-person-check"></i> Attendance
+        <i class="bi bi-person-check"></i> Employee Visits
     </a>
     {% elif role == 'site_staff' %}
     <div class="sidebar-section-label">Staff</div>
