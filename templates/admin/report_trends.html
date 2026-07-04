@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Visit Trends</h2>
+    <a href="/admin/dashboard" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <canvas id="trendsChart" height="100"></canvas>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    {% for c in centres %}
+                    <th>{{ c }}</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set dates = trends | map(attribute='date') | unique | list %}
+                {% for date in dates %}
+                <tr>
+                    <td class="text-nowrap">{{ date }}</td>
+                    {% for c in centres %}
+                    {% set row = trends | selectattr('date', 'equalto', date) | selectattr('site_name', 'equalto', c) | list %}
+                    <td>{{ row[0]['visits'] if row else 0 }}</td>
+                    {% endfor %}
+                    <td class="fw-semibold">{{ trends | selectattr('date', 'equalto', date) | sum(attribute='visits') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{{ 2 + centres|length }}" class="p-0">
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="bi bi-bar-chart"></i></div>
+                            <h6>No data yet</h6>
+                            <p>Visit data will appear once visitors are logged.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    var ctx = document.getElementById('trendsChart').getContext('2d');
+    var data = {{ trends | tojson | safe }};
+    var centres = {{ centre_names | tojson | safe }};
+    var dates = [...new Set(data.map(function(d) { return d.date; }))].sort();
+    var colors = ['#0088f8','#43A047','#FB8C00','#E53935','#8E24AA','#00ACC1','#6D4C41'];
+    var datasets = centres.map(function(c, i) {
+        return {
+            label: c,
+            data: dates.map(function(d) {
+                var row = data.find(function(r) { return r.date === d && r.site_name === c; });
+                return row ? row.visits : 0;
+            }),
+            borderColor: colors[i % colors.length],
+            backgroundColor: colors[i % colors.length] + '22',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+        };
+    });
+    new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets: datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { mode: 'index', intersect: false },
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+        },
+    });
+})();
+</script>
+{% endblock %}

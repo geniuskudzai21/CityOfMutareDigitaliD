@@ -1,5 +1,7 @@
 import base64
+import csv
 import functools
+import io
 import os
 import pickle
 import tempfile
@@ -45,6 +47,9 @@ from database import (
     get_user_by_username,
     init_db,
     delete_orphaned_logs,
+    get_visit_trends,
+    get_employee_attendance,
+    get_filtered_logs_for_export,
 )
 from face_utils import encode_face, match_face
 from chatbot import get_chatbot_response
@@ -453,6 +458,44 @@ def staff_override_entry():
 def admin_gadgets():
     gadgets = get_all_checked_in_gadgets(db_path)
     return render_template("admin/gadgets.html", gadgets=gadgets)
+
+
+@app.route("/admin/logs/export")
+@login_required
+@role_required("admin")
+def admin_logs_export():
+    date = request.args.get("date")
+    site = request.args.get("site")
+    name = request.args.get("name")
+    status = request.args.get("status")
+    rows = get_filtered_logs_for_export(db_path, date, site, name, status)
+    output = io.StringIO()
+    w = csv.writer(output)
+    w.writerow(["Timestamp", "Name", "Site", "Status", "Purpose", "Notes", "Role", "Department", "Centre"])
+    for r in rows:
+        w.writerow([r["timestamp"], r["person_name"], r["site_name"], r["status"],
+                    r["purpose"], r["notes"], r["role"] or "", r["department"] or "", r["centre"] or ""])
+    resp = app.make_response(output.getvalue())
+    resp.headers["Content-Type"] = "text/csv; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=visit_logs_export.csv"
+    return resp
+
+
+@app.route("/admin/reports/trends")
+@login_required
+@role_required("admin")
+def admin_report_trends():
+    trends = get_visit_trends(db_path)
+    centre_names = get_all_centres(db_path)
+    return render_template("admin/report_trends.html", trends=trends, centres=centre_names, centre_names=centre_names)
+
+
+@app.route("/admin/reports/attendance")
+@login_required
+@role_required("admin")
+def admin_report_attendance():
+    attendance = get_employee_attendance(db_path)
+    return render_template("admin/report_attendance.html", attendance=attendance)
 
 
 @app.route("/admin/logs")

@@ -3,7 +3,10 @@
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
     <h2 class="mb-0">Visit Logs</h2>
-    <span class="text-muted small">{{ logs|length }} record{% if logs|length != 1 %}s{% endif %}</span>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="text-muted small">{{ logs|length }} record{% if logs|length != 1 %}s{% endif %}</span>
+        <a href="/admin/logs/export?date={{ selected_date or '' }}&site={{ selected_site or '' }}&name={{ selected_name or '' }}&status={{ selected_status or '' }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>Export CSV</a>
+    </div>
 </div>
 
 <div class="card shadow-sm">

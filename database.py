@@ -398,6 +398,64 @@ def get_staff_recent_logs(db_path, centre, limit=20):
     return [dict(r) for r in rows]
 
 
+def get_visit_trends(db_path, days=14):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT DATE(timestamp) AS date, site_name, COUNT(*) AS visits
+        FROM visit_logs
+        WHERE timestamp >= datetime('now', ?)
+        GROUP BY DATE(timestamp), site_name
+        ORDER BY date ASC
+    """, (f"-{days} days",)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_employee_attendance(db_path, days=30):
+    conn = get_connection(db_path)
+    rows = conn.execute("""
+        SELECT e.id, e.full_name, e.department, e.centre, e.role,
+               COUNT(vl.id) AS visit_count,
+               MAX(vl.timestamp) AS last_visit
+        FROM employees e
+        LEFT JOIN visit_logs vl ON e.id = vl.employee_id
+        GROUP BY e.id
+        ORDER BY visit_count DESC
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_filtered_logs_for_export(db_path, date=None, site=None, name=None, status=None):
+    query = """
+        SELECT vl.timestamp, vl.site_name, vl.status, vl.purpose, vl.notes,
+               COALESCE(e.full_name, vl.override_name, 'Unknown') AS person_name,
+               e.role, e.department, e.centre
+        FROM visit_logs vl
+        LEFT JOIN employees e ON vl.employee_id = e.id
+        WHERE 1=1
+    """
+    params = []
+    if date:
+        query += " AND DATE(vl.timestamp) = ?"
+        params.append(date)
+    if site:
+        query += " AND vl.site_name = ?"
+        params.append(site)
+    if name:
+        query += " AND (e.full_name LIKE ? OR vl.override_name LIKE ?)"
+        params.append(f"%{name}%")
+        params.append(f"%{name}%")
+    if status:
+        query += " AND vl.status = ?"
+        params.append(status)
+    query += " ORDER BY vl.timestamp DESC"
+    conn = get_connection(db_path)
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
 def delete_orphaned_logs(db_path):
     conn = get_connection(db_path)
     result = conn.execute("""
