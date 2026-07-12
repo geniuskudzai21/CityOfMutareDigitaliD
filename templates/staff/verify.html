@@ -148,6 +148,7 @@ const confirmBtn = document.getElementById("confirmBtn");
 const spinner = document.getElementById("spinner");
 const overlay = document.getElementById("scanOverlay");
 let lastMatch = null;
+let lastLogId = null;
 
 startWebcam(video);
 
@@ -182,6 +183,7 @@ scanBtn.addEventListener("click", async () => {
                 matchResult.style.display = "block";
             } else {
                 lastMatch = null;
+                lastLogId = data.log_id || null;
                 document.getElementById("overrideForm").style.display = "none";
                 noMatchResult.style.display = "block";
             }
@@ -268,14 +270,13 @@ document.getElementById("submitOverrideBtn").addEventListener("click", async fun
         document.getElementById("statusMsg").innerHTML = '<div class="alert alert-warning">All fields are required.</div>';
         return;
     }
-    const photo = captureFrame(video, canvas);
     this.disabled = true;
     try {
         const res = await fetch("/staff/override-entry", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                photo,
+                log_id: lastLogId,
                 override_name: name,
                 override_phone_verified: phone,
                 override_confirmed_by: confirmer,

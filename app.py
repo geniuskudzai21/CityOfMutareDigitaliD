@@ -30,6 +30,7 @@ from database import (
     get_distinct_departments,
     get_all_employees,
     get_all_staff,
+    get_connection,
     get_dashboard_stats,
     get_distinct_sites,
     get_filtered_employees,
@@ -368,8 +369,8 @@ def staff_verify():
         os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
         with open(photo_path, "wb") as f:
             f.write(image_data)
-        add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
-        return jsonify({"verified": False, "error": "No face detected"})
+        log_id = add_log(db_path, None, site_name, "unknown", unrecognized_photo_path=photo_path)
+        return jsonify({"verified": False, "error": "No face detected", "log_id": log_id})
 
     employees = get_all_employees(db_path)
     known = []
@@ -449,27 +450,31 @@ def staff_checkout_gadget():
 @role_required("site_staff")
 def staff_override_entry():
     data = request.get_json()
-    header, encoded = data["photo"].split(",", 1)
-    image_data = base64.b64decode(encoded)
-    filename = f"{uuid.uuid4().hex}.jpg"
-    photo_path = os.path.join(UNRECOGNIZED_PHOTO_DIR, filename)
-    os.makedirs(UNRECOGNIZED_PHOTO_DIR, exist_ok=True)
-    with open(photo_path, "wb") as f:
-        f.write(image_data)
+    log_id = data.get("log_id")
     confirmer_username = data["override_confirmed_by"]
     valid_staff = get_admin_staff(db_path)
     valid_usernames = {s["username"] for s in valid_staff}
     if confirmer_username not in valid_usernames:
         return jsonify({"success": False, "error": "Invalid confirmer selected."}), 400
-    add_override_entry(
-        db_path,
-        session.get("assigned_centre", ""),
-        data["override_name"],
-        data["override_phone_verified"],
-        confirmer_username,
-        data["override_notes"],
-        photo_path,
-    )
+    if log_id:
+        conn = get_connection(db_path)
+        conn.execute(
+            "UPDATE visit_logs SET is_override = 1, override_name = ?, override_phone_verified = ?, "
+            "override_confirmed_by = ?, override_notes = ?, timestamp = ? WHERE id = ?",
+            (data["override_name"], data["override_phone_verified"], confirmer_username,
+             data["override_notes"], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), log_id),
+        )
+        conn.commit()
+        conn.close()
+    else:
+        add_override_entry(
+            db_path,
+            session.get("assigned_centre", ""),
+            data["override_name"],
+            data["override_phone_verified"],
+            confirmer_username,
+            data["override_notes"],
+        )
     return jsonify({"success": True})
 
 
