@@ -17,7 +17,7 @@
             <tbody>
                 {% for log in logs %}
                 <tr>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Status">
                         {% if log.is_override %}
                         <span class="badge bg-warning text-dark" title="Entry Allowed via Call">Override</span>
                         {% else %}
@@ -33,7 +33,7 @@
                         <span class="text-muted">Unknown</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Actions">
                         <a href="{{ url_for('admin_unrecognized_edit', log_id=log.id) }}" class="text-decoration-none me-2" title="Edit">
                             <i class="bi bi-pencil-square"></i>
                         </a>

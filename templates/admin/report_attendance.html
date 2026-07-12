@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h2 class="mb-0">Employee Visits</h2>
     <div class="d-flex gap-2">
         <a href="/admin/reports/attendance/export" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>CSV</a>
@@ -25,17 +25,17 @@
             <tbody>
                 {% for emp in attendance %}
                 <tr>
-                    <td>{{ loop.index }}</td>
-                    <td class="fw-semibold">{{ emp.full_name }}</td>
-                    <td>{{ emp.department or '—' }}</td>
-                    <td>{{ emp.centre or '—' }}</td>
-                    <td>{{ emp.role or '—' }}</td>
-                    <td>
+                    <td data-label="#">{{ loop.index }}</td>
+                    <td class="fw-semibold" data-label="Name">{{ emp.full_name }}</td>
+                    <td data-label="Department">{{ emp.department or '—' }}</td>
+                    <td data-label="Centre">{{ emp.centre or '—' }}</td>
+                    <td data-label="Role">{{ emp.role or '—' }}</td>
+                    <td data-label="Visits">
                         <span class="badge {% if emp.visit_count > 10 %}bg-success{% elif emp.visit_count > 0 %}bg-info{% else %}bg-secondary{% endif %}">
                             {{ emp.visit_count }}
                         </span>
                     </td>
-                    <td class="text-nowrap">{{ emp.last_visit or '—' }}</td>
+                    <td class="text-nowrap" data-label="Last Visit">{{ emp.last_visit or '—' }}</td>
                 </tr>
                 {% else %}
                 <tr>

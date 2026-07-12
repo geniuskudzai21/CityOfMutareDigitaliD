@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+<div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 mb-4 text-center">
     <h2 class="mb-0">Gadgets On-Site</h2>
     <span class="text-muted small">{{ gadgets|length }} gadget{% if gadgets|length != 1 %}s{% endif %} currently checked in</span>
 </div>
@@ -23,12 +23,12 @@
                 <tbody>
                     {% for g in gadgets %}
                     <tr>
-                        <td><span class="badge bg-secondary">{{ g.gadget_type }}</span></td>
-                        <td>{{ g.gadget_name }}</td>
-                        <td>{{ g.serial_number or '—' }}</td>
-                        <td class="text-nowrap">{{ g.checked_in_time }}</td>
-                        <td>{{ g.full_name or 'Unknown' }}</td>
-                        <td>{{ g.site_name }}</td>
+                        <td data-label="Type"><span class="badge bg-secondary">{{ g.gadget_type }}</span></td>
+                        <td data-label="Name">{{ g.gadget_name }}</td>
+                        <td data-label="Serial Number">{{ g.serial_number or '—' }}</td>
+                        <td class="text-nowrap" data-label="Checked In">{{ g.checked_in_time }}</td>
+                        <td data-label="Visitor">{{ g.full_name or 'Unknown' }}</td>
+                        <td data-label="Centre">{{ g.site_name }}</td>
                     </tr>
                     {% else %}
                     <tr>

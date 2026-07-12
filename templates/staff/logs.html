@@ -13,7 +13,7 @@
                         <th>Name</th>
                         <th class="d-none d-sm-table-cell">Role</th>
                         <th>Status</th>
-                        <th style="width:36px">Gadgets</th>
+                        <th>Gadgets</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +47,7 @@
                         <td colspan="5" class="p-0">
                             <div class="p-3 bg-light">
                                 {% if log.gadgets %}
+                                <div class="table-responsive">
                                 <table class="table table-sm table-borderless mb-0" style="font-size:0.9rem">
                                     <thead>
                                         <tr>
@@ -69,6 +70,7 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                                </div>
                                 {% else %}
                                 <span class="text-muted small">No gadgets for this visit.</span>
                                 {% endif %}

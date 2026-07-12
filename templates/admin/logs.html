@@ -62,13 +62,13 @@
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width:150px">Date / Time</th>
+                        <th>Date / Time</th>
                         <th>Name</th>
-                        <th class="d-none d-md-table-cell" style="width:110px">Role</th>
-                        <th class="d-none d-lg-table-cell" style="width:130px">Dept</th>
+                        <th class="d-none d-md-table-cell">Role</th>
+                        <th class="d-none d-lg-table-cell">Dept</th>
                         <th>Site</th>
-                        <th style="width:36px">Gadgets</th>
-                        <th style="width:100px">Actions</th>
+                        <th>Gadgets</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -76,8 +76,8 @@
                     <tr>
                         <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
                         <td data-label="Name">{{ log.full_name or '—' }}</td>
-                        <td class="d-none d-md-table-cell" style="width:110px" data-label="Role">{{ log.role or '—' }}</td>
-                        <td class="d-none d-lg-table-cell" style="width:130px" data-label="Dept">{{ log.department or '—' }}</td>
+                        <td class="d-none d-md-table-cell" data-label="Role">{{ log.role or '—' }}</td>
+                        <td class="d-none d-lg-table-cell" data-label="Dept">{{ log.department or '—' }}</td>
                         <td data-label="Site">{{ log.site_name }}</td>
                         <td class="text-center" data-label="Gadgets">
                             {% set gc = log.gadgets|length %}
@@ -103,6 +103,7 @@
                         <td colspan="7" class="p-0">
                             <div class="p-3 bg-light">
                                 {% if log.gadgets %}
+                                <div class="table-responsive">
                                 <table class="table table-sm table-borderless mb-0" style="font-size:0.9rem">
                                     <thead>
                                         <tr>
@@ -125,6 +126,7 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
+                                </div>
                                 {% else %}
                                 <span class="text-muted small">No gadgets for this visit.</span>
                                 {% endif %}
@@ -154,11 +156,11 @@
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width:150px">Date / Time</th>
+                        <th>Date / Time</th>
                         <th>Visitor (stated)</th>
                         <th>Site</th>
                         <th>Status</th>
-                        <th style="width:100px">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -223,10 +225,10 @@
             <table class="table table-striped table-hover table-bordered mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th style="width:150px">Date / Time</th>
+                        <th>Date / Time</th>
                         <th>Site</th>
                         <th>Status</th>
-                        <th style="width:100px">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>

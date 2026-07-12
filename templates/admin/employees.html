@@ -67,7 +67,7 @@
                         <td data-label="Department">{{ emp.department or '—' }}</td>
                         <td data-label="Contact">{{ emp.contact or '—' }}</td>
                         <td data-label="Site">{{ emp.centre or '—' }}</td>
-                        <td>
+                        <td data-label="Actions">
                             <a href="{{ url_for('admin_employee_edit', emp_id=emp.id) }}" class="text-decoration-none me-2" title="Edit">
                                 <i class="bi bi-pencil-square text-primary" style="font-size:1.15rem"></i>
                             </a>

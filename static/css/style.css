@@ -1117,8 +1117,9 @@ video {
   .table-responsive td.d-lg-table-cell {
     padding: 0.5rem 0;
     border: none !important;
-    text-align: left !important;
+    text-align: center !important;
     display: flex !important;
+    justify-content: center;
     width: 100% !important;
     align-items: center;
     gap: 0.5rem;
@@ -1130,7 +1131,6 @@ video {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    min-width: 95px;
     flex-shrink: 0;
   }
   .table-responsive td:first-child {
@@ -1344,7 +1344,7 @@ video {
   background: #0070d0;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 540px) {
   .chatbot-body {
     position: fixed;
     top: 0;
@@ -1354,11 +1354,19 @@ video {
     width: auto;
     height: auto;
     border-radius: 0;
-    bottom: 0;
   }
   .chatbot-container {
     bottom: 12px;
     right: 12px;
+  }
+}
+@media (max-width: 540px) {
+  .chatbot--open .chatbot-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    bottom: auto;
+    z-index: 10001;
   }
 }
 

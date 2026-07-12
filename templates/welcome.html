@@ -52,7 +52,6 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     position: relative;
-    left: 200px;
     animation: cardIn 0.8s ease-out;
 }
 .welcome-card::after {
@@ -111,20 +110,10 @@ body::before {
 @keyframes blinkCursor {
     50% { border-color: transparent; }
 }
-@media (max-width: 1200px) {
-    .welcome-card { left: 150px; }
-}
-@media (max-width: 992px) {
-    .welcome-card { left: 80px; }
-}
-@media (max-width: 768px) {
-    .welcome-card { left: 40px; }
-}
 @media (max-width: 576px) {
     .welcome-card {
         padding: 24px 28px;
         gap: 1rem;
-        left: 0;
     }
     .welcome-btn {
         padding: 0.7rem 1.8rem;
