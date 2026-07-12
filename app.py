@@ -682,8 +682,8 @@ def admin_employee_create_login(emp_id):
         centres = get_all_centres(db_path)
         departments = get_distinct_departments(db_path)
         return render_template("admin/employees.html", employees=employees, centres=centres, departments=departments,
-                               login_error=error, login_emp_id=emp_id)
-    add_user(db_path, username, password, "site_staff", centre)
+                               login_error=error, login_emp_id=emp_id, login_emp_name=emp["full_name"], login_emp_centre=centre)
+    add_user(db_path, username, password, "site_staff", centre, employee_id=emp_id)
     return redirect(url_for("admin_employees"))
 
 

@@ -62,7 +62,7 @@
                 <tbody>
                     {% for emp in employees %}
                     <tr>
-                        <td class="fw-semibold" data-label="Name">{{ emp.full_name }}</td>
+                        <td class="fw-semibold" data-label="Name">{{ emp.full_name }}{% if emp.has_login %} <i class="bi bi-building text-info" style="font-size:0.65rem" title="Centre Staff"></i>{% endif %}</td>
                         <td data-label="Role">{{ emp.role or '—' }}</td>
                         <td data-label="Department">{{ emp.department or '—' }}</td>
                         <td data-label="Contact">{{ emp.contact or '—' }}</td>
@@ -167,6 +167,14 @@ function openLoginModal(empId, fullName, centre) {
     }
     {% if login_error %}
     var modalEl = document.getElementById('loginModal');
+    document.getElementById('loginEmpName').textContent = '{{ login_emp_name }}';
+    document.getElementById('login_emp_id').value = '{{ login_emp_id }}';
+    document.getElementById('login_username').value = '{{ login_emp_name }}'.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+    document.getElementById('login_centre').value = '{{ login_emp_centre or '' }}';
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger mb-0';
+    alertDiv.textContent = '{{ login_error }}';
+    document.getElementById('loginModal').querySelector('.modal-body').prepend(alertDiv);
     var modal = new bootstrap.Modal(modalEl);
     modal.show();
     {% endif %}

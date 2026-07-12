@@ -85,6 +85,11 @@ def migrate_db(db_path):
             conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT 1")
         except sqlite3.OperationalError:
             pass
+    for col in ["employee_id"]:
+        try:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER REFERENCES employees(id)")
+        except sqlite3.OperationalError:
+            pass
     conn.execute("UPDATE users SET active = 1 WHERE active IS NULL")
     for col in ["checked_out_time"]:
         try:
@@ -265,11 +270,11 @@ def get_user_by_username(db_path, username):
     return dict(row) if row else None
 
 
-def add_user(db_path, username, password, role, assigned_centre=None):
+def add_user(db_path, username, password, role, assigned_centre=None, employee_id=None):
     conn = get_connection(db_path)
     conn.execute(
-        "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
-        (username, generate_password_hash(password), role, assigned_centre),
+        "INSERT INTO users (username, password_hash, role, assigned_centre, employee_id) VALUES (?, ?, ?, ?, ?)",
+        (username, generate_password_hash(password), role, assigned_centre, employee_id),
     )
     conn.commit()
     conn.close()
@@ -297,21 +302,23 @@ def get_distinct_departments(db_path):
 
 
 def get_filtered_employees(db_path, name=None, department=None, role=None, centre=None):
-    query = "SELECT * FROM employees WHERE 1=1"
+    query = """SELECT e.*, CASE WHEN u.id IS NOT NULL THEN 1 ELSE 0 END AS has_login
+               FROM employees e LEFT JOIN users u ON u.employee_id = e.id
+               WHERE 1=1"""
     params = []
     if name:
-        query += " AND full_name LIKE ?"
+        query += " AND e.full_name LIKE ?"
         params.append(f"%{name}%")
     if department:
-        query += " AND department = ?"
+        query += " AND e.department = ?"
         params.append(department)
     if role:
-        query += " AND role LIKE ?"
+        query += " AND e.role LIKE ?"
         params.append(f"%{role}%")
     if centre:
-        query += " AND centre = ?"
+        query += " AND e.centre = ?"
         params.append(centre)
-    query += " ORDER BY created_at DESC"
+    query += " ORDER BY e.created_at DESC"
     conn = get_connection(db_path)
     rows = conn.execute(query, params).fetchall()
     conn.close()

@@ -182,7 +182,6 @@
             document.getElementById('stat-today').textContent = j.stats.today_visits;
             document.getElementById('stat-total').textContent = j.stats.total_logs;
             document.getElementById('stat-unknown').textContent = j.stats.unknown_count;
-            if (j.trends) renderTrends(j.trends);
         }).catch(function() {});
     }, 5000);
 })();
