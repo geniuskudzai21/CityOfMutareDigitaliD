@@ -15,3 +15,4 @@ def match_face(unknown_encoding, known_encodings_list, tolerance=0.5):
     if distances[best_idx] <= tolerance:
         return best_idx
     return None
+
