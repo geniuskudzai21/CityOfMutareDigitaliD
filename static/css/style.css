@@ -1091,7 +1091,7 @@ video {
   color: var(--red-700);
 }
 
-/* ── Responsive Tables (vertical cards on mobile) ── */
+/* ── Responsive Tables (2-column cards on mobile) ── */
 
 @media (max-width: 768px) {
   .table-responsive thead {
@@ -1104,50 +1104,62 @@ video {
     width: 100%;
   }
   .table-responsive tr {
-    margin-bottom: 0.875rem;
+    margin-bottom: 1rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 0.5rem 1rem;
-    box-shadow: 0 1px 4px rgba(15,26,46,0.06);
+    padding: 0.25rem 0;
+    box-shadow: var(--shadow);
     border-left: 3px solid var(--navy-600);
+    overflow: hidden;
   }
   .table-responsive td,
   .table-responsive td.d-none,
   .table-responsive td.d-md-table-cell,
   .table-responsive td.d-lg-table-cell {
-    padding: 0.5rem 0;
+    display: grid !important;
+    grid-template-columns: 100px 1fr;
+    align-items: baseline;
+    padding: 0.45rem 0.875rem;
     border: none !important;
+    border-bottom: 1px solid var(--border);
     text-align: left !important;
-    display: flex !important;
-    justify-content: flex-start;
-    width: 100% !important;
-    align-items: center;
     gap: 0.5rem;
+    width: 100% !important;
+  }
+  .table-responsive td:last-child {
+    border-bottom: none;
   }
   .table-responsive td::before {
     content: attr(data-label);
-    font-weight: 700;
-    font-size: 0.7rem;
+    font-weight: 600;
+    font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     color: var(--text-muted);
-    flex-shrink: 0;
-  }
-  .table-responsive td:first-child {
-    padding-top: 0.25rem;
-  }
-  .table-responsive td:last-child {
-    padding-bottom: 0.25rem;
   }
   .table-responsive .empty-state {
     display: block;
   }
   .table-responsive .empty-state td {
     padding: 0 !important;
+    border-bottom: none !important;
+    display: block !important;
   }
   .table-responsive .badge {
     font-size: 0.7rem;
     padding: 0.3em 0.6em;
+  }
+  .table-responsive td[data-label="Actions"] {
+    display: flex !important;
+    grid-template-columns: none;
+    gap: 0.75rem;
+  }
+  .table-responsive td[data-label="Actions"]::before {
+    margin-right: 45px;
+  }
+  .table-responsive td[data-label="Actions"] > * {
+    display: inline-flex !important;
+    vertical-align: middle;
   }
 }
 

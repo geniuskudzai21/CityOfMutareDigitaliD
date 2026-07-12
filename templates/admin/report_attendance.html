@@ -30,11 +30,7 @@
                     <td data-label="Department">{{ emp.department or '—' }}</td>
                     <td data-label="Centre">{{ emp.centre or '—' }}</td>
                     <td data-label="Role">{{ emp.role or '—' }}</td>
-                    <td data-label="Visits">
-                        <span class="badge {% if emp.visit_count > 10 %}bg-success{% elif emp.visit_count > 0 %}bg-info{% else %}bg-secondary{% endif %}">
-                            {{ emp.visit_count }}
-                        </span>
-                    </td>
+                    <td data-label="Visits">{{ emp.visit_count }}</td>
                     <td class="text-nowrap" data-label="Last Visit">{{ emp.last_visit or '—' }}</td>
                 </tr>
                 {% else %}
