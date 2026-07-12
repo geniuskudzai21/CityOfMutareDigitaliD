@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+<div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 mb-4 text-center">
     <h2 class="mb-0">Employees</h2>
     <span class="text-muted small">{{ employees|length }} employee{% if employees|length != 1 %}s{% endif %}</span>
 </div>
