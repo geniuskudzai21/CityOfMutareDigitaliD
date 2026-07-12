@@ -61,11 +61,11 @@
                                     <tbody>
                                         {% for g in log.gadgets %}
                                         <tr>
-                                            <td>{{ g.gadget_type }}</td>
-                                            <td>{{ g.gadget_name }}</td>
-                                            <td>{{ g.serial_number or '—' }}</td>
-                                            <td>{{ g.checked_in_time }}</td>
-                                            <td>{{ g.checked_out_time or '—' }}</td>
+                                            <td data-label="Type">{{ g.gadget_type }}</td>
+                                            <td data-label="Name">{{ g.gadget_name }}</td>
+                                            <td data-label="Serial">{{ g.serial_number or '—' }}</td>
+                                            <td data-label="Checked In">{{ g.checked_in_time }}</td>
+                                            <td data-label="Checked Out">{{ g.checked_out_time or '—' }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>

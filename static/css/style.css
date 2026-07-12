@@ -1147,7 +1147,7 @@ video {
   }
   .table-responsive .badge {
     font-size: 0.7rem;
-    padding: 0.3em 0.6em;
+    padding: 4px 10px !important;
   }
   .table-responsive td[data-label="Actions"] {
     display: flex !important;
@@ -1160,6 +1160,15 @@ video {
   .table-responsive td[data-label="Actions"] > * {
     display: inline-flex !important;
     vertical-align: middle;
+  }
+  .table-responsive .gadget-detail-row td,
+  .table-responsive .override-detail-row td {
+    display: block !important;
+    border-bottom: none !important;
+  }
+  .table-responsive .gadget-detail-row .table-responsive td,
+  .table-responsive .override-detail-row .table-responsive td {
+    display: grid !important;
   }
 }
 

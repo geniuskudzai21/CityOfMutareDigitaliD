@@ -5,7 +5,7 @@
     <h2 class="mb-0">Visit Logs</h2>
     <div class="d-flex gap-2 align-items-center">
         <span class="text-muted small">{{ logs|length }} record{% if logs|length != 1 %}s{% endif %}</span>
-        <a href="/admin/logs/export?date={{ selected_date or '' }}&site={{ selected_site or '' }}&name={{ selected_name or '' }}&status={{ selected_status or '' }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>Export CSV</a>
+        <a href="/admin/logs/export?date={{ selected_date or '' }}&site={{ selected_site or '' }}&name={{ selected_name or '' }}&status={{ selected_status or '' }}" class="btn btn-outline-primary btn-sm" title="Export CSV"><i class="bi bi-download"></i></a>
     </div>
 </div>
 
@@ -117,11 +117,11 @@
                                     <tbody>
                                         {% for g in log.gadgets %}
                                         <tr>
-                                            <td>{{ g.gadget_type }}</td>
-                                            <td>{{ g.gadget_name }}</td>
-                                            <td>{{ g.serial_number or '—' }}</td>
-                                            <td>{{ g.checked_in_time }}</td>
-                                            <td>{{ g.checked_out_time or '—' }}</td>
+                                            <td data-label="Type">{{ g.gadget_type }}</td>
+                                            <td data-label="Name">{{ g.gadget_name }}</td>
+                                            <td data-label="Serial">{{ g.serial_number or '—' }}</td>
+                                            <td data-label="Checked In">{{ g.checked_in_time }}</td>
+                                            <td data-label="Checked Out">{{ g.checked_out_time or '—' }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
