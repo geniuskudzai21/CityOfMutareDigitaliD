@@ -9,7 +9,7 @@
         <div class="card stat-card text-bg-primary">
             <div class="card-body">
                 <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-                <div class="stat-value">{{ stats.employee_count }}</div>
+                <div class="stat-value" id="stat-employees">{{ stats.employee_count }}</div>
                 <div class="stat-label">Total Employees</div>
             </div>
         </div>
@@ -18,7 +18,7 @@
         <div class="card stat-card text-bg-success">
             <div class="card-body">
                 <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
-                <div class="stat-value">{{ stats.today_visits }}</div>
+                <div class="stat-value" id="stat-today">{{ stats.today_visits }}</div>
                 <div class="stat-label">Today's Visits</div>
             </div>
         </div>
@@ -27,7 +27,7 @@
         <div class="card stat-card text-bg-info" style="background:linear-gradient(135deg,var(--blue-600),#1E88E5)!important;border-color:transparent">
             <div class="card-body">
                 <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
-                <div class="stat-value">{{ stats.total_logs }}</div>
+                <div class="stat-value" id="stat-total">{{ stats.total_logs }}</div>
                 <div class="stat-label">Total Visit Records</div>
             </div>
         </div>
@@ -37,7 +37,7 @@
             <div class="card stat-card text-bg-warning">
                 <div class="card-body">
                     <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                    <div class="stat-value">{{ stats.unknown_count }}</div>
+                    <div class="stat-value" id="stat-unknown">{{ stats.unknown_count }}</div>
                     <div class="stat-label">Unrecognized{% if stats.unknown_count > 0 %} &middot; Needs Review{% endif %}</div>
                 </div>
             </div>
@@ -132,39 +132,58 @@
     var ctx = document.getElementById('trendsChart').getContext('2d');
     var data = {{ trends | tojson | safe }};
     var centres = {{ centre_names | tojson | safe }};
-    var dates = [...new Set(data.map(function(d) { return d.date; }))].sort();
     var colors = ['#0088f8','#43A047','#FB8C00','#E53935','#8E24AA','#00ACC1','#6D4C41'];
-    var datasets = centres.map(function(c, i) {
-        return {
-            label: c,
-            data: dates.map(function(d) {
-                var row = data.find(function(r) { return r.date === d && r.site_name === c; });
-                return row ? row.visits : 0;
-            }),
-            borderColor: colors[i % colors.length],
-            backgroundColor: colors[i % colors.length] + '22',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 2,
-        };
-    });
-    new Chart(ctx, {
-        type: 'line',
-        data: { labels: dates, datasets: datasets },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
-                tooltip: { mode: 'index', intersect: false },
+
+    function buildChart(dates, ds) {
+        if (window._chart) window._chart.destroy();
+        window._chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: dates, datasets: ds },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
+                    tooltip: { mode: 'index', intersect: false },
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, maxTicksLimit: 20 } },
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
             },
-            scales: {
-                x: { grid: { display: false } },
-                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, maxTicksLimit: 20 } },
-            },
-            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-        },
-    });
+        });
+    }
+
+    function renderTrends(trendData) {
+        var dates = [...new Set(trendData.map(function(d) { return d.date; }))].sort();
+        var ds = centres.map(function(c, i) {
+            return {
+                label: c,
+                data: dates.map(function(d) {
+                    var row = trendData.find(function(r) { return r.date === d && r.site_name === c; });
+                    return row ? row.visits : 0;
+                }),
+                borderColor: colors[i % colors.length],
+                backgroundColor: colors[i % colors.length] + '22',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 2,
+            };
+        });
+        buildChart(dates, ds);
+    }
+
+    renderTrends(data);
+
+    setInterval(function() {
+        fetch('/api/admin/dashboard-stats').then(function(r) { return r.json(); }).then(function(j) {
+            document.getElementById('stat-employees').textContent = j.stats.employee_count;
+            document.getElementById('stat-today').textContent = j.stats.today_visits;
+            document.getElementById('stat-total').textContent = j.stats.total_logs;
+            document.getElementById('stat-unknown').textContent = j.stats.unknown_count;
+        }).catch(function() {});
+    }, 5000);
 })();
 </script>
 {% endblock %}

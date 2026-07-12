@@ -142,6 +142,15 @@ def admin_dashboard():
     return render_template("admin_dashboard.html", stats=stats, trends=trends, centre_names=centre_names)
 
 
+@app.route("/api/admin/dashboard-stats")
+@login_required
+@role_required("admin")
+def api_admin_dashboard_stats():
+    stats = get_dashboard_stats(db_path)
+    trends = get_visit_trends(db_path)
+    return jsonify({"stats": stats, "trends": trends})
+
+
 @app.route("/staff/dashboard")
 @login_required
 @role_required("site_staff")
@@ -150,6 +159,16 @@ def staff_dashboard():
     recent_logs = get_staff_recent_logs(db_path, centre, limit=5)
     today_count = get_today_centre_visits(db_path, centre)
     return render_template("staff_dashboard.html", centre=centre, logs=recent_logs, today_count=today_count)
+
+
+@app.route("/api/staff/dashboard-stats")
+@login_required
+@role_required("site_staff")
+def api_staff_dashboard_stats():
+    centre = session.get("assigned_centre", "")
+    recent_logs = get_staff_recent_logs(db_path, centre, limit=5)
+    today_count = get_today_centre_visits(db_path, centre)
+    return jsonify({"today_count": today_count, "logs": recent_logs})
 
 
 @app.route("/staff/logs")

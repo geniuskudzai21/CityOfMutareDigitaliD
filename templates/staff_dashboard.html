@@ -16,7 +16,7 @@
         <div class="card stat-card text-bg-success">
             <div class="card-body">
                 <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
-                <div class="stat-value">{{ today_count }}</div>
+                <div class="stat-value" id="stat-today">{{ today_count }}</div>
                 <div class="stat-label">Today's Visits</div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="logs-body">
                 {% for log in logs %}
                 <tr>
                     <td class="text-nowrap" data-label="Date / Time">{{ log.timestamp }}</td>
@@ -75,4 +75,34 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    function renderLogs(logs) {
+        var body = document.getElementById('logs-body');
+        if (!logs.length) {
+            body.innerHTML = '<tr><td colspan="4" class="p-0"><div class="empty-state"><div class="empty-icon"><i class="bi bi-clock-history"></i></div><h6>No visits logged yet today</h6><p>Scan a face to begin recording visits at {{ centre }}.</p></div></td></tr>';
+            return;
+        }
+        body.innerHTML = logs.map(function(log) {
+            var name = log.full_name || log.override_name || '\u2014';
+            var role = log.role || (log.is_override ? 'Override' : '\u2014');
+            var badge;
+            if (log.is_override) badge = '<span class="badge bg-warning text-dark">OVERRIDE</span>';
+            else if (log.status === 'verified') badge = '<span class="badge bg-success">VERIFIED</span>';
+            else badge = '<span class="badge bg-danger">UNKNOWN</span>';
+            return '<tr><td class="text-nowrap" data-label="Date / Time">' + log.timestamp + '</td><td data-label="Name">' + name + '</td><td class="d-none d-sm-table-cell" data-label="Role">' + role + '</td><td data-label="Status">' + badge + '</td></tr>';
+        }).join('');
+    }
+
+    setInterval(function() {
+        fetch('/api/staff/dashboard-stats').then(function(r) { return r.json(); }).then(function(j) {
+            document.getElementById('stat-today').textContent = j.today_count;
+            renderLogs(j.logs);
+        }).catch(function() {});
+    }, 5000);
+})();
+</script>
 {% endblock %}
