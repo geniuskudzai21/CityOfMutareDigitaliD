@@ -172,10 +172,12 @@ def get_all_employees(db_path):
 
 
 def add_log(db_path, employee_id, site_name, status, purpose=None, notes=None, unrecognized_photo_path=None):
+    from datetime import datetime
     conn = get_connection(db_path)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor = conn.execute(
-        "INSERT INTO visit_logs (employee_id, site_name, status, purpose, notes, unrecognized_photo_path) VALUES (?, ?, ?, ?, ?, ?)",
-        (employee_id, site_name, status, purpose, notes, unrecognized_photo_path),
+        "INSERT INTO visit_logs (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, now),
     )
     conn.commit()
     log_id = cursor.lastrowid
@@ -344,7 +346,9 @@ def get_dashboard_stats(db_path):
     conn = get_connection(db_path)
     emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
     total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
-    today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = DATE('now')").fetchone()[0]
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = ?", (today,)).fetchone()[0]
     unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
     recent_logs = conn.execute("""
         SELECT vl.*, e.full_name, e.role, e.department
@@ -376,10 +380,12 @@ def get_unrecognized_logs(db_path):
 
 
 def get_today_centre_visits(db_path, centre):
+    from datetime import datetime
     conn = get_connection(db_path)
+    today = datetime.now().strftime("%Y-%m-%d")
     count = conn.execute(
-        "SELECT COUNT(*) FROM visit_logs WHERE site_name = ? AND DATE(timestamp) = DATE('now')",
-        (centre,),
+        "SELECT COUNT(*) FROM visit_logs WHERE site_name = ? AND DATE(timestamp) = ?",
+        (centre, today),
     ).fetchone()[0]
     conn.close()
     return count
@@ -399,14 +405,16 @@ def get_staff_recent_logs(db_path, centre, limit=20):
 
 
 def get_visit_trends(db_path, days=14):
+    from datetime import datetime, timedelta
     conn = get_connection(db_path)
+    since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
     rows = conn.execute("""
         SELECT DATE(timestamp) AS date, site_name, COUNT(*) AS visits
         FROM visit_logs
-        WHERE timestamp >= datetime('now', ?)
+        WHERE timestamp >= ?
         GROUP BY DATE(timestamp), site_name
         ORDER BY date ASC
-    """, (f"-{days} days",)).fetchall()
+    """, (since,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -536,10 +544,12 @@ def get_admin_staff(db_path):
 
 
 def add_override_entry(db_path, site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path=None):
+    from datetime import datetime
     conn = get_connection(db_path)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor = conn.execute(
-        "INSERT INTO visit_logs (site_name, status, override_name, override_phone_verified, override_confirmed_by, override_notes, is_override, unrecognized_photo_path) VALUES (?, 'unknown', ?, ?, ?, ?, 1, ?)",
-        (site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path),
+        "INSERT INTO visit_logs (site_name, status, override_name, override_phone_verified, override_confirmed_by, override_notes, is_override, unrecognized_photo_path, timestamp) VALUES (?, 'unknown', ?, ?, ?, ?, 1, ?, ?)",
+        (site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path, now),
     )
     conn.commit()
     log_id = cursor.lastrowid
