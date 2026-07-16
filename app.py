@@ -457,15 +457,14 @@ def staff_override_entry():
     if confirmer_username not in valid_usernames:
         return jsonify({"success": False, "error": "Invalid confirmer selected."}), 400
     if log_id:
-        conn = get_connection(db_path)
-        conn.execute(
-            "UPDATE visit_logs SET is_override = 1, override_name = ?, override_phone_verified = ?, "
-            "override_confirmed_by = ?, override_notes = ?, timestamp = ? WHERE id = ?",
-            (data["override_name"], data["override_phone_verified"], confirmer_username,
-             data["override_notes"], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), log_id),
-        )
-        conn.commit()
-        conn.close()
+        with get_connection(db_path) as conn:
+            conn.execute(
+                "UPDATE visit_logs SET is_override = 1, override_name = ?, override_phone_verified = ?, "
+                "override_confirmed_by = ?, override_notes = ?, timestamp = ? WHERE id = ?",
+                (data["override_name"], data["override_phone_verified"], confirmer_username,
+                 data["override_notes"], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), log_id),
+            )
+            conn.commit()
     else:
         add_override_entry(
             db_path,
@@ -591,11 +590,10 @@ def admin_log_edit(log_id):
     employee_id = request.form.get("employee_id")
     purpose = request.form.get("purpose")
     notes = request.form.get("notes")
-    conn = get_connection(db_path)
-    conn.execute("UPDATE visit_logs SET employee_id = ?, purpose = ?, notes = ?, status = ? WHERE id = ?",
-                 (int(employee_id) if employee_id else None, purpose, notes, 'verified' if employee_id else 'unknown', log_id))
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute("UPDATE visit_logs SET employee_id = ?, purpose = ?, notes = ?, status = ? WHERE id = ?",
+                     (int(employee_id) if employee_id else None, purpose, notes, 'verified' if employee_id else 'unknown', log_id))
+        conn.commit()
     return redirect(url_for("admin_logs"))
 
 

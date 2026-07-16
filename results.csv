@@ -1,0 +1,11 @@
+image_name,lighting_condition,expected_match,actual_match,correct,time_taken_ms
+chaltonchado.jpg,normal,Chalton Chado,Chalton Chado,True,2012.99
+geniuskudzai.jpg,normal,Genius Kudzai,Genius Kudzai,True,1473.97
+knoxkhalil.jpg,normal,Knox Khalil,Knox Khalil,True,1010.09
+pilanimkwananzi.jpg,normal,Pilani Mkwananzi,Pilani Mkwananzi,True,984.92
+praisemashore.jpg,normal,Praise Mashore,Praise Mashore,True,1084.70
+sam.jpg,normal,Sam ,Sam ,True,1006.35
+tafadzwakwashira.jpg,normal,Tafadzwa Kwashira,Tafadzwa Kwashira,True,986.10
+takumantadiwa.jpg,normal,Takuman Tadiwa,Takuman Tadiwa,True,908.91
+tantowavie.jpg,normal,Tanto wavie,Tanto wavie,True,896.90
+tanyasams.jpg,normal,Tanya Sams,Tanya Sams,True,1400.34

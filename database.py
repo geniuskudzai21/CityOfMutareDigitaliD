@@ -1,62 +1,72 @@
 import sqlite3
 import os
+import contextlib
 
 from werkzeug.security import generate_password_hash
 
 
+@contextlib.contextmanager
+def get_connection(db_path):
+    conn = sqlite3.connect(db_path, timeout=20)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
 def init_db(db_path):
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path)
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
-            role TEXT,
-            department TEXT,
-            contact TEXT,
-            centre TEXT,
-            photo_path TEXT,
-            face_encoding BLOB,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS visit_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            employee_id INTEGER REFERENCES employees(id) ON DELETE SET NULL,
-            site_name TEXT NOT NULL,
-            status TEXT NOT NULL CHECK(status IN ('verified', 'unknown')),
-            purpose TEXT,
-            notes TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('admin', 'site_staff')),
-            assigned_centre TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS centres (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS departments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS gadgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            visit_id INTEGER NOT NULL REFERENCES visit_logs(id) ON DELETE CASCADE,
-            gadget_type TEXT NOT NULL CHECK(gadget_type IN ('Laptop', 'Phone', 'Tablet', 'Hard Drive', 'Camera', 'Other')),
-            gadget_name TEXT NOT NULL,
-            serial_number TEXT,
-            checked_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            checked_out_time TIMESTAMP
-        );
-    """)
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS employees (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                full_name TEXT NOT NULL,
+                role TEXT,
+                department TEXT,
+                contact TEXT,
+                centre TEXT,
+                photo_path TEXT,
+                face_encoding BLOB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS visit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                employee_id INTEGER REFERENCES employees(id) ON DELETE SET NULL,
+                site_name TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('verified', 'unknown')),
+                purpose TEXT,
+                notes TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL CHECK(role IN ('admin', 'site_staff')),
+                assigned_centre TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS centres (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS departments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS gadgets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                visit_id INTEGER NOT NULL REFERENCES visit_logs(id) ON DELETE CASCADE,
+                gadget_type TEXT NOT NULL CHECK(gadget_type IN ('Laptop', 'Phone', 'Tablet', 'Hard Drive', 'Camera', 'Other')),
+                gadget_name TEXT NOT NULL,
+                serial_number TEXT,
+                checked_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                checked_out_time TIMESTAMP
+            );
+        """)
     migrate_db(db_path)
     init_users(db_path)
     init_centres(db_path)
@@ -64,166 +74,146 @@ def init_db(db_path):
 
 
 def migrate_db(db_path):
-    conn = sqlite3.connect(db_path)
-    for col in ["centre"]:
-        try:
-            conn.execute(f"ALTER TABLE employees ADD COLUMN {col} TEXT")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["purpose", "notes"]:
-        try:
-            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["unrecognized_photo_path"]:
-        try:
-            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["active"]:
-        try:
-            conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT 1")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["employee_id"]:
-        try:
-            conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER REFERENCES employees(id)")
-        except sqlite3.OperationalError:
-            pass
-    conn.execute("UPDATE users SET active = 1 WHERE active IS NULL")
-    for col in ["checked_out_time"]:
-        try:
-            conn.execute(f"ALTER TABLE gadgets ADD COLUMN {col} TIMESTAMP")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["is_override"]:
-        try:
-            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} INTEGER DEFAULT 0")
-        except sqlite3.OperationalError:
-            pass
-    for col in ["override_name", "override_phone_verified", "override_confirmed_by", "override_notes"]:
-        try:
-            conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
-        except sqlite3.OperationalError:
-            pass
-    conn.close()
+    with get_connection(db_path) as conn:
+        for col in ["centre"]:
+            try:
+                conn.execute(f"ALTER TABLE employees ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["purpose", "notes"]:
+            try:
+                conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["unrecognized_photo_path"]:
+            try:
+                conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["active"]:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT 1")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["employee_id"]:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} INTEGER REFERENCES employees(id)")
+            except sqlite3.OperationalError:
+                pass
+        conn.execute("UPDATE users SET active = 1 WHERE active IS NULL")
+        for col in ["checked_out_time"]:
+            try:
+                conn.execute(f"ALTER TABLE gadgets ADD COLUMN {col} TIMESTAMP")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["is_override"]:
+            try:
+                conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} INTEGER DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass
+        for col in ["override_name", "override_phone_verified", "override_confirmed_by", "override_notes"]:
+            try:
+                conn.execute(f"ALTER TABLE visit_logs ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass
 
 
 def init_users(db_path):
-    conn = get_connection(db_path)
-    existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    if existing == 0:
-        default_users = [
-            ("admin", generate_password_hash("admin123"), "admin", None),
-            ("staff1", generate_password_hash("staff123"), "site_staff", "Civic Centre"),
-            ("staff2", generate_password_hash("staff123"), "site_staff", "Sakubva"),
-        ]
-        conn.executemany(
-            "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
-            default_users,
-        )
-        conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        if existing == 0:
+            default_users = [
+                ("admin", generate_password_hash("admin123"), "admin", None),
+                ("staff1", generate_password_hash("staff123"), "site_staff", "Civic Centre"),
+                ("staff2", generate_password_hash("staff123"), "site_staff", "Sakubva"),
+            ]
+            conn.executemany(
+                "INSERT INTO users (username, password_hash, role, assigned_centre) VALUES (?, ?, ?, ?)",
+                default_users,
+            )
+            conn.commit()
 
 
 def init_centres(db_path):
-    conn = get_connection(db_path)
-    existing = conn.execute("SELECT COUNT(*) FROM centres").fetchone()[0]
-    if existing == 0:
-        centres = ["Civic Centre", "Stores", "Moffat", "Chikanga", "Hobhouse", "Odzani", "FernValley"]
-        for c in centres:
-            conn.execute("INSERT INTO centres (name) VALUES (?)", (c,))
-        conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        existing = conn.execute("SELECT COUNT(*) FROM centres").fetchone()[0]
+        if existing == 0:
+            centres = ["Civic Centre", "Stores", "Moffat", "Chikanga", "Hobhouse", "Odzani", "FernValley"]
+            for c in centres:
+                conn.execute("INSERT INTO centres (name) VALUES (?)", (c,))
+            conn.commit()
 
 
 def init_departments(db_path):
-    conn = get_connection(db_path)
-    existing = conn.execute("SELECT COUNT(*) FROM departments").fetchone()[0]
-    if existing == 0:
-        departments = ["ICT", "HR", "TRAFFIC", "FINANCE", "DEBTORS", "PAYMENTS", "SALARIES",
-                       "SECURITY", "SPATIAL PLANNING", "GIS", "ENGINEERING", "HEALTH",
-                       "HOUSING", "PROCUREMENT", "ACCOUNTANT EXPENDITURE", "AUDIT", "CASHIER", "ASSETS"]
-        for d in departments:
-            conn.execute("INSERT INTO departments (name) VALUES (?)", (d,))
-        conn.commit()
-    conn.close()
-
-
-def get_connection(db_path):
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    with get_connection(db_path) as conn:
+        existing = conn.execute("SELECT COUNT(*) FROM departments").fetchone()[0]
+        if existing == 0:
+            departments = ["ICT", "HR", "TRAFFIC", "FINANCE", "DEBTORS", "PAYMENTS", "SALARIES",
+                           "SECURITY", "SPATIAL PLANNING", "GIS", "ENGINEERING", "HEALTH",
+                           "HOUSING", "PROCUREMENT", "ACCOUNTANT EXPENDITURE", "AUDIT", "CASHIER", "ASSETS"]
+            for d in departments:
+                conn.execute("INSERT INTO departments (name) VALUES (?)", (d,))
+            conn.commit()
 
 
 def add_employee(db_path, full_name, role, department, contact, centre, photo_path, face_encoding):
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "INSERT INTO employees (full_name, role, department, contact, centre, photo_path, face_encoding) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (full_name, role, department, contact, centre, photo_path, face_encoding),
-    )
-    conn.commit()
-    emp_id = cursor.lastrowid
-    conn.close()
-    return emp_id
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "INSERT INTO employees (full_name, role, department, contact, centre, photo_path, face_encoding) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (full_name, role, department, contact, centre, photo_path, face_encoding),
+        )
+        conn.commit()
+        return cursor.lastrowid
 
 
 def get_all_employees(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT * FROM employees ORDER BY created_at DESC").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT * FROM employees ORDER BY created_at DESC").fetchall()
+        return [dict(r) for r in rows]
 
 
 def add_log(db_path, employee_id, site_name, status, purpose=None, notes=None, unrecognized_photo_path=None):
     from datetime import datetime
-    conn = get_connection(db_path)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor = conn.execute(
-        "INSERT INTO visit_logs (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, now),
-    )
-    conn.commit()
-    log_id = cursor.lastrowid
-    conn.close()
-    return log_id
+    with get_connection(db_path) as conn:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor = conn.execute(
+            "INSERT INTO visit_logs (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (employee_id, site_name, status, purpose, notes, unrecognized_photo_path, now),
+        )
+        conn.commit()
+        return cursor.lastrowid
 
 
 def delete_log(db_path, log_id):
-    conn = get_connection(db_path)
-    conn.execute("DELETE FROM visit_logs WHERE id = ?", (log_id,))
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute("DELETE FROM visit_logs WHERE id = ?", (log_id,))
+        conn.commit()
 
 
 def update_log_employee(db_path, log_id, employee_id, status='verified'):
-    conn = get_connection(db_path)
-    conn.execute("UPDATE visit_logs SET employee_id = ?, status = ? WHERE id = ?", (employee_id, status, log_id))
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute("UPDATE visit_logs SET employee_id = ?, status = ? WHERE id = ?", (employee_id, status, log_id))
+        conn.commit()
 
 
 def get_log_by_id(db_path, log_id):
-    conn = get_connection(db_path)
-    row = conn.execute(
-        "SELECT vl.*, e.full_name, e.role, e.department, e.centre AS emp_centre, e.photo_path AS emp_photo_path FROM visit_logs vl LEFT JOIN employees e ON vl.employee_id = e.id WHERE vl.id = ?",
-        (log_id,),
-    ).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT vl.*, e.full_name, e.role, e.department, e.centre AS emp_centre, e.photo_path AS emp_photo_path FROM visit_logs vl LEFT JOIN employees e ON vl.employee_id = e.id WHERE vl.id = ?",
+            (log_id,),
+        ).fetchone()
+        return dict(row) if row else None
 
 
 def get_all_logs(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT vl.*, e.full_name, e.role, e.department
-        FROM visit_logs vl
-        LEFT JOIN employees e ON vl.employee_id = e.id
-        ORDER BY vl.timestamp DESC
-    """).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT vl.*, e.full_name, e.role, e.department
+            FROM visit_logs vl
+            LEFT JOIN employees e ON vl.employee_id = e.id
+            ORDER BY vl.timestamp DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_filtered_logs(db_path, date=None, site=None, name=None, status=None, centre=None):
@@ -250,61 +240,54 @@ def get_filtered_logs(db_path, date=None, site=None, name=None, status=None, cen
         query += " AND e.centre = ?"
         params.append(centre)
     query += " ORDER BY vl.timestamp DESC"
-    conn = get_connection(db_path)
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_distinct_sites(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT DISTINCT site_name FROM visit_logs ORDER BY site_name").fetchall()
-    conn.close()
-    return [r["site_name"] for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT DISTINCT site_name FROM visit_logs ORDER BY site_name").fetchall()
+        return [r["site_name"] for r in rows]
 
 
 def get_user_by_username(db_path, username):
-    conn = get_connection(db_path)
-    row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        return dict(row) if row else None
 
 
 def add_user(db_path, username, password, role, assigned_centre=None, employee_id=None):
-    conn = get_connection(db_path)
-    conn.execute(
-        "INSERT INTO users (username, password_hash, role, assigned_centre, employee_id) VALUES (?, ?, ?, ?, ?)",
-        (username, generate_password_hash(password), role, assigned_centre, employee_id),
-    )
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO users (username, password_hash, role, assigned_centre, employee_id) VALUES (?, ?, ?, ?, ?)",
+            (username, generate_password_hash(password), role, assigned_centre, employee_id),
+        )
+        conn.commit()
 
 
 def get_all_staff(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT id, username, assigned_centre, created_at FROM users WHERE role = 'site_staff' ORDER BY created_at DESC").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT id, username, assigned_centre, created_at FROM users WHERE role = 'site_staff' ORDER BY created_at DESC").fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_all_centres(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT id, name FROM centres ORDER BY name").fetchall()
-    conn.close()
-    return [r["name"] for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT id, name FROM centres ORDER BY name").fetchall()
+        return [r["name"] for r in rows]
 
 
 def get_distinct_departments(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT name FROM departments ORDER BY name").fetchall()
-    conn.close()
-    return [r["name"] for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT name FROM departments ORDER BY name").fetchall()
+        return [r["name"] for r in rows]
 
 
 def get_filtered_employees(db_path, name=None, department=None, role=None, centre=None):
     query = """SELECT e.*, CASE WHEN u.id IS NOT NULL THEN 1 ELSE 0 END AS has_login
-               FROM employees e LEFT JOIN users u ON u.employee_id = e.id
-               WHERE 1=1"""
+                   FROM employees e LEFT JOIN users u ON u.employee_id = e.id
+                   WHERE 1=1"""
     params = []
     if name:
         query += " AND e.full_name LIKE ?"
@@ -319,126 +302,117 @@ def get_filtered_employees(db_path, name=None, department=None, role=None, centr
         query += " AND e.centre = ?"
         params.append(centre)
     query += " ORDER BY e.created_at DESC"
-    conn = get_connection(db_path)
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_employee_by_id(db_path, emp_id):
-    conn = get_connection(db_path)
-    row = conn.execute("SELECT * FROM employees WHERE id = ?", (emp_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM employees WHERE id = ?", (emp_id,)).fetchone()
+        return dict(row) if row else None
 
 
 def update_employee(db_path, emp_id, full_name, role, department, contact, centre):
-    conn = get_connection(db_path)
-    conn.execute(
-        "UPDATE employees SET full_name = ?, role = ?, department = ?, contact = ?, centre = ? WHERE id = ?",
-        (full_name, role, department, contact, centre, emp_id),
-    )
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "UPDATE employees SET full_name = ?, role = ?, department = ?, contact = ?, centre = ? WHERE id = ?",
+            (full_name, role, department, contact, centre, emp_id),
+        )
+        conn.commit()
 
 
 def delete_employee(db_path, emp_id):
-    conn = get_connection(db_path)
-    conn.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute("UPDATE users SET employee_id = NULL WHERE employee_id = ?", (emp_id,))
+        conn.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
+        conn.commit()
 
 
 def get_dashboard_stats(db_path):
-    conn = get_connection(db_path)
-    emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
-    total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
     from datetime import datetime
-    today = datetime.now().strftime("%Y-%m-%d")
-    today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = ?", (today,)).fetchone()[0]
-    unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
-    recent_logs = conn.execute("""
-        SELECT vl.*, e.full_name, e.role, e.department
-        FROM visit_logs vl
-        LEFT JOIN employees e ON vl.employee_id = e.id
-        ORDER BY vl.timestamp DESC LIMIT 5
-    """).fetchall()
-    conn.close()
-    return {
-        "employee_count": emp_count,
-        "total_logs": total_logs,
-        "today_visits": today_visits,
-        "unknown_count": unknown_count,
-        "recent_logs": [dict(r) for r in recent_logs],
-    }
+    with get_connection(db_path) as conn:
+        emp_count = conn.execute("SELECT COUNT(*) FROM employees").fetchone()[0]
+        total_logs = conn.execute("SELECT COUNT(*) FROM visit_logs").fetchone()[0]
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_visits = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE DATE(timestamp) = ?", (today,)).fetchone()[0]
+        unknown_count = conn.execute("SELECT COUNT(*) FROM visit_logs WHERE status = 'unknown'").fetchone()[0]
+        recent_logs = conn.execute("""
+            SELECT vl.*, e.full_name, e.role, e.department
+            FROM visit_logs vl
+            LEFT JOIN employees e ON vl.employee_id = e.id
+            ORDER BY vl.timestamp DESC LIMIT 5
+        """).fetchall()
+        return {
+            "employee_count": emp_count,
+            "total_logs": total_logs,
+            "today_visits": today_visits,
+            "unknown_count": unknown_count,
+            "recent_logs": [dict(r) for r in recent_logs],
+        }
 
 
 def get_unrecognized_logs(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT vl.*, e.full_name, e.role, e.department, e.centre
-        FROM visit_logs vl
-        LEFT JOIN employees e ON vl.employee_id = e.id
-        WHERE vl.status = 'unknown'
-        ORDER BY vl.timestamp DESC
-    """).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT vl.*, e.full_name, e.role, e.department, e.centre
+            FROM visit_logs vl
+            LEFT JOIN employees e ON vl.employee_id = e.id
+            WHERE vl.status = 'unknown'
+            ORDER BY vl.timestamp DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_today_centre_visits(db_path, centre):
     from datetime import datetime
-    conn = get_connection(db_path)
-    today = datetime.now().strftime("%Y-%m-%d")
-    count = conn.execute(
-        "SELECT COUNT(*) FROM visit_logs WHERE site_name = ? AND DATE(timestamp) = ?",
-        (centre, today),
-    ).fetchone()[0]
-    conn.close()
-    return count
+    with get_connection(db_path) as conn:
+        today = datetime.now().strftime("%Y-%m-%d")
+        count = conn.execute(
+            "SELECT COUNT(*) FROM visit_logs WHERE site_name = ? AND DATE(timestamp) = ?",
+            (centre, today),
+        ).fetchone()[0]
+        return count
 
 
 def get_staff_recent_logs(db_path, centre, limit=20):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT vl.*, e.full_name, e.role
-        FROM visit_logs vl
-        LEFT JOIN employees e ON vl.employee_id = e.id
-        WHERE vl.site_name = ?
-        ORDER BY vl.timestamp DESC LIMIT ?
-    """, (centre, limit)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT vl.*, e.full_name, e.role
+            FROM visit_logs vl
+            LEFT JOIN employees e ON vl.employee_id = e.id
+            WHERE vl.site_name = ?
+            ORDER BY vl.timestamp DESC LIMIT ?
+        """, (centre, limit)).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_visit_trends(db_path, days=14):
     from datetime import datetime, timedelta
-    conn = get_connection(db_path)
-    since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
-    rows = conn.execute("""
-        SELECT DATE(timestamp) AS date, site_name, COUNT(*) AS visits
-        FROM visit_logs
-        WHERE timestamp >= ?
-        GROUP BY DATE(timestamp), site_name
-        ORDER BY date ASC
-    """, (since,)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        rows = conn.execute("""
+            SELECT DATE(timestamp) AS date, site_name, COUNT(*) AS visits
+            FROM visit_logs
+            WHERE timestamp >= ?
+            GROUP BY DATE(timestamp), site_name
+            ORDER BY date ASC
+        """, (since,)).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_employee_attendance(db_path, days=30):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT e.id, e.full_name, e.department, e.centre, e.role,
-               COUNT(vl.id) AS visit_count,
-               MAX(vl.timestamp) AS last_visit
-        FROM employees e
-        LEFT JOIN visit_logs vl ON e.id = vl.employee_id
-        GROUP BY e.id
-        ORDER BY visit_count DESC
-    """).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT e.id, e.full_name, e.department, e.centre, e.role,
+                   COUNT(vl.id) AS visit_count,
+                   MAX(vl.timestamp) AS last_visit
+            FROM employees e
+            LEFT JOIN visit_logs vl ON e.id = vl.employee_id
+            GROUP BY e.id
+            ORDER BY visit_count DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_filtered_logs_for_export(db_path, date=None, site=None, name=None, status=None):
@@ -465,100 +439,89 @@ def get_filtered_logs_for_export(db_path, date=None, site=None, name=None, statu
         query += " AND vl.status = ?"
         params.append(status)
     query += " ORDER BY vl.timestamp DESC"
-    conn = get_connection(db_path)
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
 
 
 def delete_orphaned_logs(db_path):
-    conn = get_connection(db_path)
-    result = conn.execute("""
-        DELETE FROM visit_logs
-        WHERE employee_id IS NOT NULL
-        AND employee_id NOT IN (SELECT id FROM employees)
-    """)
-    deleted = result.rowcount
-    conn.commit()
-    conn.close()
-    return deleted
+    with get_connection(db_path) as conn:
+        result = conn.execute("""
+            DELETE FROM visit_logs
+            WHERE employee_id IS NOT NULL
+            AND employee_id NOT IN (SELECT id FROM employees)
+        """)
+        deleted = result.rowcount
+        conn.commit()
+        return deleted
 
 
 def add_gadget(db_path, visit_id, gadget_type, gadget_name, serial_number=None):
-    conn = get_connection(db_path)
-    cursor = conn.execute(
-        "INSERT INTO gadgets (visit_id, gadget_type, gadget_name, serial_number, checked_in_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
-        (visit_id, gadget_type, gadget_name, serial_number),
-    )
-    conn.commit()
-    gadget_id = cursor.lastrowid
-    conn.close()
-    return gadget_id
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "INSERT INTO gadgets (visit_id, gadget_type, gadget_name, serial_number, checked_in_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)",
+            (visit_id, gadget_type, gadget_name, serial_number),
+        )
+        conn.commit()
+        return cursor.lastrowid
 
 
 def get_unchecked_gadgets_for_employee(db_path, employee_id):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT g.*
-        FROM gadgets g
-        JOIN visit_logs vl ON g.visit_id = vl.id
-        WHERE vl.employee_id = ? AND g.checked_out_time IS NULL
-        ORDER BY g.checked_in_time
-    """, (employee_id,)).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT g.*
+            FROM gadgets g
+            JOIN visit_logs vl ON g.visit_id = vl.id
+            WHERE vl.employee_id = ? AND g.checked_out_time IS NULL
+            ORDER BY g.checked_in_time
+        """, (employee_id,)).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_gadgets_for_visit(db_path, visit_id):
-    conn = get_connection(db_path)
-    rows = conn.execute(
-        "SELECT * FROM gadgets WHERE visit_id = ? ORDER BY checked_in_time",
-        (visit_id,),
-    ).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            "SELECT * FROM gadgets WHERE visit_id = ? ORDER BY checked_in_time",
+            (visit_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
 
 
 def checkout_gadget(db_path, gadget_id):
-    conn = get_connection(db_path)
-    conn.execute(
-        "UPDATE gadgets SET checked_out_time = CURRENT_TIMESTAMP WHERE id = ? AND checked_out_time IS NULL",
-        (gadget_id,),
-    )
-    conn.commit()
-    conn.close()
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "UPDATE gadgets SET checked_out_time = CURRENT_TIMESTAMP WHERE id = ? AND checked_out_time IS NULL",
+            (gadget_id,),
+        )
+        conn.commit()
 
 
 def get_all_checked_in_gadgets(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("""
-        SELECT g.*, vl.site_name, vl.employee_id, e.full_name
-        FROM gadgets g
-        JOIN visit_logs vl ON g.visit_id = vl.id
-        LEFT JOIN employees e ON vl.employee_id = e.id
-        WHERE g.checked_out_time IS NULL
-        ORDER BY g.checked_in_time DESC
-    """).fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("""
+            SELECT g.*, vl.site_name, vl.employee_id, e.full_name
+            FROM gadgets g
+            JOIN visit_logs vl ON g.visit_id = vl.id
+            LEFT JOIN employees e ON vl.employee_id = e.id
+            WHERE g.checked_out_time IS NULL
+            ORDER BY g.checked_in_time DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_admin_staff(db_path):
-    conn = get_connection(db_path)
-    rows = conn.execute("SELECT id, username, role, assigned_centre FROM users WHERE role = 'admin' OR assigned_centre = 'Civic Centre' ORDER BY role, username").fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with get_connection(db_path) as conn:
+        rows = conn.execute("SELECT id, username, role, assigned_centre FROM users WHERE role = 'admin' OR assigned_centre = 'Civic Centre' ORDER BY role, username").fetchall()
+        return [dict(r) for r in rows]
 
 
 def add_override_entry(db_path, site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path=None):
     from datetime import datetime
-    conn = get_connection(db_path)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor = conn.execute(
-        "INSERT INTO visit_logs (site_name, status, override_name, override_phone_verified, override_confirmed_by, override_notes, is_override, unrecognized_photo_path, timestamp) VALUES (?, 'unknown', ?, ?, ?, ?, 1, ?, ?)",
-        (site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path, now),
-    )
-    conn.commit()
-    log_id = cursor.lastrowid
-    conn.close()
-    return log_id
+    with get_connection(db_path) as conn:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor = conn.execute(
+            "INSERT INTO visit_logs (site_name, status, override_name, override_phone_verified, override_confirmed_by, override_notes, is_override, unrecognized_photo_path, timestamp) VALUES (?, 'unknown', ?, ?, ?, ?, 1, ?, ?)",
+            (site_name, override_name, override_phone_verified, override_confirmed_by, override_notes, unrecognized_photo_path, now),
+        )
+        conn.commit()
+        return cursor.lastrowid
